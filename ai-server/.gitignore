@@ -1,0 +1,4 @@
+node_modules
+.env
+# The repo root ignores package-lock.json (it uses yarn); this package uses npm ci.
+!package-lock.json

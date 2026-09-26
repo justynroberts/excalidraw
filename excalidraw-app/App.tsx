@@ -145,9 +145,11 @@ import { AIComponents } from "./components/AI";
 import { ExcalidrawPlusIframeExport } from "./ExcalidrawPlusIframeExport";
 
 import "./index.scss";
+import "./theme/blueprint.scss";
 
 import { ExcalidrawPlusPromoBanner } from "./components/ExcalidrawPlusPromoBanner";
-import { AppSidebar } from "./components/AppSidebar";
+import { AppSidebar, CLAUDE_SIDEBAR_TAB } from "./components/AppSidebar";
+import { startBridge } from "./ai/bridgeClient";
 
 import type { CollabAPI } from "./collab/Collab";
 
@@ -471,6 +473,15 @@ const ExcalidrawWrapper = () => {
   // collaborators for exercising avatar/UserList UI without a real
   // collab room
   useSimulatedCollaborators(excalidrawAPI);
+
+  // Connect this tab to the AI server so MCP clients and the Claude panel can
+  // act on the canvas.
+  useEffect(() => {
+    if (!excalidrawAPI) {
+      return;
+    }
+    return startBridge(excalidrawAPI);
+  }, [excalidrawAPI]);
 
   // ---------------------------------------------------------------------------
   // Hoisted loadImages
@@ -993,12 +1004,40 @@ const ExcalidrawWrapper = () => {
         theme={editorTheme}
         onThemeChange={setAppTheme}
         renderTopRightUI={(isMobile) => {
-          if (isMobile || !collabAPI || isCollabDisabled) {
+          if (isMobile) {
             return null;
+          }
+
+          const claudeOpen =
+            excalidrawAPI?.getAppState().openSidebar?.tab ===
+            CLAUDE_SIDEBAR_TAB;
+          const claudeTrigger = (
+            <button
+              type="button"
+              className="claude-trigger"
+              aria-pressed={claudeOpen}
+              title="Claude (canvas assistant)"
+              onClick={() =>
+                excalidrawAPI?.toggleSidebar({
+                  name: "default",
+                  tab: CLAUDE_SIDEBAR_TAB,
+                  force: !claudeOpen,
+                })
+              }
+            >
+              Claude
+            </button>
+          );
+
+          if (!collabAPI || isCollabDisabled) {
+            return (
+              <div className="excalidraw-ui-top-right">{claudeTrigger}</div>
+            );
           }
 
           return (
             <div className="excalidraw-ui-top-right">
+              {claudeTrigger}
               {excalidrawAPI?.getEditorInterface().formFactor === "desktop" && (
                 <ExcalidrawPlusPromoBanner
                   isSignedIn={isExcalidrawPlusSignedUser}
@@ -1100,7 +1139,7 @@ const ExcalidrawWrapper = () => {
           }}
         />
 
-        <AppSidebar />
+        <AppSidebar excalidrawAPI={excalidrawAPI} />
 
         {errorMessage && (
           <ErrorDialog onClose={() => setErrorMessage("")}>

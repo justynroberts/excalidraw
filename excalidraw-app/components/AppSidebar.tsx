@@ -6,7 +6,13 @@ import {
 import { LinkButton } from "@excalidraw/excalidraw/components/LinkButton";
 import { useUIAppState } from "@excalidraw/excalidraw/context/ui-appState";
 
+import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
+
+import { ClaudePanel } from "../ai/ClaudePanel";
+
 import "./AppSidebar.scss";
+
+export const CLAUDE_SIDEBAR_TAB = "claude";
 
 type SidebarPromoCopyProps = {
   text: string;
@@ -65,12 +71,28 @@ const SidebarPromoCopy = (props: SidebarPromoCopyProps) => {
   );
 };
 
-export const AppSidebar = () => {
+export const AppSidebar = ({
+  excalidrawAPI,
+}: {
+  excalidrawAPI: ExcalidrawImperativeAPI | null;
+}) => {
   const { theme, openSidebar } = useUIAppState();
 
   return (
     <DefaultSidebar>
       <DefaultSidebar.TabTriggers>
+        <Sidebar.TabTrigger
+          tab={CLAUDE_SIDEBAR_TAB}
+          title="Claude"
+          style={{
+            opacity: openSidebar?.tab === CLAUDE_SIDEBAR_TAB ? 1 : 0.4,
+            fontFamily: "ui-monospace, Menlo, monospace",
+            fontWeight: 700,
+            fontSize: 11,
+          }}
+        >
+          AI
+        </Sidebar.TabTrigger>
         <Sidebar.TabTrigger
           tab="comments"
           style={{ opacity: openSidebar?.tab === "comments" ? 1 : 0.4 }}
@@ -84,6 +106,9 @@ export const AppSidebar = () => {
           {presentationIcon}
         </Sidebar.TabTrigger>
       </DefaultSidebar.TabTriggers>
+      <Sidebar.Tab tab={CLAUDE_SIDEBAR_TAB} className="app-sidebar-claude-tab">
+        <ClaudePanel api={excalidrawAPI} />
+      </Sidebar.Tab>
       <Sidebar.Tab tab="comments">
         <div className="app-sidebar-promo-container">
           <div

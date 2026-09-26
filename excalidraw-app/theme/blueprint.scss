@@ -1,0 +1,154 @@
+/* MIT License - Copyright (c) fintonlabs.com */
+
+// Blueprint: the editor chrome as a drafting table. Near-black ground, hairline
+// rules instead of floating cards, one cyan accent, one monospace family,
+// square corners. Implemented as token overrides on top of Excalidraw's own
+// theme so upstream merges stay clean. `body` raises specificity above the
+// package defaults. See DESIGN.md.
+
+$bp-font: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+
+// Geometry and type apply in both themes so the editor keeps one identity.
+body .excalidraw {
+  --ui-font: #{$bp-font};
+  --border-radius-md: 2px;
+  --border-radius-lg: 4px;
+
+  --shadow-island: none;
+  --shadow-island-stronger: none;
+  --modal-shadow: none;
+  --sidebar-shadow: none;
+  --library-dropdown-shadow: none;
+  --chat-msg-shadow: none;
+
+  --color-primary: #0b8fb0;
+  --color-primary-darker: #0a7f9d;
+  --color-primary-darkest: #086b85;
+  --color-primary-hover: #0a7f9d;
+  --color-primary-light: #d7f3fa;
+  --color-primary-light-darker: #c2ecf7;
+  --color-selection: #0b8fb0;
+  --color-brand-hover: #0a7f9d;
+  --color-brand-active: #086b85;
+  --color-surface-primary-container: #d7f3fa;
+  --color-on-primary-container: #043a48;
+  --color-logo-icon: var(--color-primary);
+  --focus-highlight-color: #0b8fb0;
+  --select-highlight-color: #0b8fb0;
+
+  font-size: 13px;
+  letter-spacing: 0;
+
+  // One family for all chrome (the canvas keeps its hand-drawn fonts).
+  button,
+  input,
+  select,
+  textarea,
+  .welcome-screen-menu-item__text,
+  .dropdown-menu-item__text,
+  .Tooltip,
+  .HelpDialog,
+  .Modal {
+    font-family: $bp-font;
+  }
+
+  // Islands, menus and dialogs are separated by a hairline, never a shadow.
+  .Island,
+  .dropdown-menu-container,
+  .Modal__content,
+  .popover,
+  .context-menu {
+    box-shadow: none !important;
+    border: 1px solid var(--default-border-color);
+  }
+
+  .sidebar {
+    box-shadow: none !important;
+    border-left: 1px solid var(--default-border-color);
+  }
+
+  // Tool labels read as small caps, like annotations on a drawing.
+  .dropdown-menu-group-title,
+  .sidebar__header,
+  .welcome-screen-menu-item__shortcut,
+  fieldset legend,
+  h3 {
+    font-family: $bp-font;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 11px;
+  }
+
+  .ToolIcon__icon,
+  .dropdown-menu-button,
+  .ToolIcon_type_button {
+    border-radius: 2px !important;
+  }
+
+  // State changes only, and fast.
+  .ToolIcon__icon,
+  .dropdown-menu-item,
+  button {
+    transition-duration: 120ms;
+    transition-timing-function: ease-out;
+  }
+}
+
+// The dark theme is the default ground: near-black, cool neutrals, cyan accent.
+body .excalidraw.theme--dark {
+  --default-bg-color: #0b0c0f;
+  --island-bg-color: #101216;
+  --island-bg-color-alt: #0d0f12;
+  --popup-bg-color: #101216;
+  --popup-secondary-bg-color: #15181d;
+  --sidebar-bg-color: #0d0f12;
+  --input-bg-color: #0b0c0f;
+  --input-hover-bg-color: #15181d;
+  --input-border-color: #262b33;
+  --default-border-color: #20252c;
+  --sidebar-border-color: #20252c;
+  --dialog-border-color: #20252c;
+  --overlay-bg-color: rgba(11, 12, 15, 0.72);
+
+  --color-surface-lowest: #0b0c0f;
+  --color-surface-low: #101216;
+  --color-surface-mid: #0d0f12;
+  --color-surface-high: #1a1e24;
+  --color-on-surface: #d6dbe1;
+  --text-primary-color: #d6dbe1;
+  --color-gray-50: #7d8792;
+  --keybinding-color: #5d6670;
+  --button-hover-bg: #1a1e24;
+  --button-active-bg: #1d2a30;
+  --button-gray-1: #1a1e24;
+  --button-gray-2: #15181d;
+  --button-gray-3: #101216;
+  --scrollbar-thumb: #262b33;
+  --scrollbar-thumb-hover: #333a44;
+
+  --color-primary: #3fc8e4;
+  --color-primary-darker: #5fd3ea;
+  --color-primary-darkest: #7fddef;
+  --color-primary-hover: #5fd3ea;
+  --color-primary-light: #133038;
+  --color-primary-light-darker: #173a44;
+  --color-selection: #3fc8e4;
+  --color-brand-hover: #5fd3ea;
+  --color-brand-active: #7fddef;
+  --color-surface-primary-container: #133038;
+  --color-on-primary-container: #c9f1f9;
+  --color-logo-text: #d6dbe1;
+  --focus-highlight-color: #3fc8e4;
+  --select-highlight-color: #3fc8e4;
+  --link-color: #3fc8e4;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body .excalidraw *,
+  body .excalidraw *::before,
+  body .excalidraw *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
