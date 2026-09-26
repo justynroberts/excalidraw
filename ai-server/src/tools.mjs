@@ -7,7 +7,7 @@ const color = { type: "string", description: 'CSS hex colour, e.g. "#a5d8ff"' };
 const fontFamily = {
   type: "number",
   description:
-    "Font: 5 Excalifont (hand-drawn, default), 6 Nunito (clean), 8 Comic Shanns (code), 7 Lilita One (heading), 101 Architects Daughter (architect lettering), 102 Caveat, 103 Kalam, 104 Patrick Hand, 105 Gloria Hallelujah, 106 Shadows Into Light, 107 Gochi Hand.",
+    "Font: 5 Excalifont (hand-drawn, default), 6 Nunito (clean), 8 Comic Shanns (code), 7 Lilita One (heading), 101 Architects Daughter (architect lettering), 102 Caveat, 103 Kalam, 104 Patrick Hand, 105 Gloria Hallelujah, 106 Shadows Into Light, 107 Gochi Hand, 108 Osifont (ISO 3098 draughtsman lettering, best for technical/architecture labels).",
 };
 
 const label = {

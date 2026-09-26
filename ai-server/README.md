@@ -1,6 +1,6 @@
-# Excalidraw AI server
+# Sketchbench AI server
 
-Claude-powered backend for this Excalidraw fork. It does three jobs:
+Claude-powered backend for Sketchbench (a fork of Excalidraw). It does three jobs:
 
 1. **Powers Excalidraw's built-in AI features.** Text-to-diagram (the "Generate" dialog) and wireframe-to-code (Magic Frame) are part of upstream Excalidraw, but their backend is Excalidraw's own hosted service and isn't open source. This server implements the same endpoints with Claude.
 2. **Runs the canvas assistant** in the app's Claude sidebar panel. Claude can read, draw, edit, tidy and critique the live canvas through tools.
@@ -30,12 +30,12 @@ Requests use server-side refusal fallback (`fallbacks: "default"`). If the prima
 
 ## MCP
 
-MCP tools act on the Excalidraw tab you focused most recently, so keep the app open.
+MCP tools act on the Sketchbench tab you focused most recently, so keep the app open.
 
 **Claude Code** (Streamable HTTP):
 
 ```bash
-claude mcp add --transport http excalidraw http://localhost:3016/mcp
+claude mcp add --transport http sketchbench http://localhost:3016/mcp
 ```
 
 **Claude Desktop** (stdio shim; the AI server must be running). Add this to `claude_desktop_config.json`:
@@ -43,9 +43,9 @@ claude mcp add --transport http excalidraw http://localhost:3016/mcp
 ```json
 {
   "mcpServers": {
-    "excalidraw": {
+    "sketchbench": {
       "command": "node",
-      "args": ["/absolute/path/to/excalidraw/ai-server/src/mcp-stdio.mjs"]
+      "args": ["/absolute/path/to/sketchbench/ai-server/src/mcp-stdio.mjs"]
     }
   }
 }

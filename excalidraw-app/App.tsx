@@ -150,6 +150,8 @@ import "./theme/blueprint.scss";
 import { ExcalidrawPlusPromoBanner } from "./components/ExcalidrawPlusPromoBanner";
 import { AppSidebar, CLAUDE_SIDEBAR_TAB } from "./components/AppSidebar";
 import { ForkNotice } from "./components/ForkNotice";
+import { exportToPdf } from "./data/exportPdf";
+import { maybeShowWelcomeScene } from "./data/welcomeScene";
 import { startBridge } from "./ai/bridgeClient";
 
 import type { CollabAPI } from "./collab/Collab";
@@ -577,6 +579,11 @@ const ExcalidrawWrapper = () => {
     initializeScene({ collabAPI, excalidrawAPI }).then(async (data) => {
       loadImages(data, /* isInitialLoad */ true);
       initialStatePromiseRef.current.promise.resolve(data.scene);
+      maybeShowWelcomeScene(
+        excalidrawAPI,
+        !!data.scene?.elements?.length ||
+          isCollaborationLink(window.location.href),
+      ).catch((error) => console.error("[welcome] sheet failed", error));
     });
 
     const onHashChange = async (event: HashChangeEvent) => {
@@ -1073,6 +1080,14 @@ const ExcalidrawWrapper = () => {
           isCollabEnabled={!isCollabDisabled}
           theme={appTheme}
           refresh={() => forceRefresh((prev) => !prev)}
+          onExportPdf={() => {
+            if (excalidrawAPI) {
+              exportToPdf(excalidrawAPI).catch((error) => {
+                console.error("[export] PDF failed", error);
+                setErrorMessage(error?.message || "PDF export failed");
+              });
+            }
+          }}
         />
         <AppWelcomeScreen
           onCollabDialogOpen={onCollabDialogOpen}

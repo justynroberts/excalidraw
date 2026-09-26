@@ -1,6 +1,6 @@
 > [!NOTE]
 >
-> **Excalidraw-FL is a fork of [Excalidraw](https://github.com/excalidraw/excalidraw)** (MIT, © Excalidraw) with a Claude AI layer: a working backend for Excalidraw's text-to-diagram and wireframe-to-code features, an AI assistant panel, an MCP server that lets Claude Code / Claude Desktop draw on your live canvas, seven extra handwritten and architect fonts, and a restyled editor. See [`ai-server/README.md`](ai-server/README.md) to run it and [`NOTICE.md`](NOTICE.md) for attribution. If you use Excalidraw, please support the original team with [Excalidraw+](https://plus.excalidraw.com). Everything below is the upstream README.
+> **Sketchbench is a fork of [Excalidraw](https://github.com/excalidraw/excalidraw)** (MIT, © Excalidraw) with a Claude AI layer and extras: a working backend for Excalidraw's text-to-diagram and wireframe-to-code features, an AI assistant panel, an MCP server that lets Claude Code / Claude Desktop draw on your live canvas, in-app access to Excalidraw's community libraries, PDF export, eight extra handwritten and draughtsman fonts, and a restyled editor. See [`ai-server/README.md`](ai-server/README.md) to run it and [`NOTICE.md`](NOTICE.md) for attribution. Sketchbench is not affiliated with or endorsed by the Excalidraw team. If you use Excalidraw, please support the original team with [Excalidraw+](https://plus.excalidraw.com). Everything below is the upstream Excalidraw README.
 
 ```bash
 yarn install && yarn install:ai

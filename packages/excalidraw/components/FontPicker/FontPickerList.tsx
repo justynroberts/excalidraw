@@ -86,6 +86,7 @@ export const getFontFamilyIcon = (
     case FONT_FAMILY["Gloria Hallelujah"]:
     case FONT_FAMILY["Shadows Into Light"]:
     case FONT_FAMILY["Gochi Hand"]:
+    case FONT_FAMILY.Osifont:
       return FreedrawIcon;
     case FONT_FAMILY.Nunito:
     case FONT_FAMILY.Helvetica:

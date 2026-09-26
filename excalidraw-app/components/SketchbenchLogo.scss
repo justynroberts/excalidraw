@@ -1,0 +1,51 @@
+/* MIT License - Copyright (c) fintonlabs.com */
+
+// Wordmark in osifont (ISO 3098 draughtsman lettering, LGPL-3.0 + font
+// exception, see packages/excalidraw/fonts/Osifont/LICENSE.txt). A separate
+// family name keeps it clear of the canvas font registry.
+@font-face {
+  font-family: "Sketchbench Lettering";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../../packages/excalidraw/fonts/Osifont/Osifont-Regular.woff2")
+    format("woff2");
+}
+
+.excalidraw {
+  .sketchbench-logo {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    color: var(--text-primary-color);
+    pointer-events: none;
+  }
+
+  .sketchbench-logo__mark {
+    width: 64px;
+    height: 64px;
+  }
+
+  .sketchbench-logo__text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .sketchbench-logo__name {
+    font-family: "Sketchbench Lettering", var(--ui-font);
+    font-size: 44px;
+    line-height: 1;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .sketchbench-logo__credit {
+    margin-top: 6px;
+    font-family: var(--ui-font);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-gray-50);
+  }
+}

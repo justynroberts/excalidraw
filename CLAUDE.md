@@ -36,9 +36,9 @@ yarn fix             # Auto-fix formatting and linting issues
 - Guidelines in `AGENTS.md` apply too (e.g. `app.ownerDocument` / `app.ownerWindow` over DOM globals in `packages/*`).
 - Run a single test file: `yarn test:app --watch=false packages/excalidraw/tests/<file>.test.tsx`
 
-## This fork: Claude AI layer
+## This fork: Sketchbench
 
-This is a fork of [excalidraw/excalidraw](https://github.com/excalidraw/excalidraw) (MIT). The fork adds a Claude-powered AI backend, an in-app canvas assistant, an MCP bridge and a restyled chrome. Keep fork changes out of `packages/*` where possible so upstream merges stay clean (`git fetch upstream && git merge upstream/master`).
+Sketchbench is a fork of [excalidraw/excalidraw](https://github.com/excalidraw/excalidraw) (MIT). The fork adds a Claude-powered AI backend, an in-app canvas assistant, an MCP bridge, an in-app browser for Excalidraw's community libraries, PDF export, extra fonts, Sketchbench branding and a restyled chrome. Keep fork changes out of `packages/*` where possible so upstream merges stay clean (`git fetch upstream && git merge upstream/master`).
 
 ### Running
 
@@ -59,6 +59,10 @@ yarn start                        # app on :3001 (VITE_APP_AI_BACKEND points at 
 
 ### Gotchas
 
+- Branding: user-facing strings say Sketchbench; "Excalidraw" appears only as attribution and in Excalidraw+ links. Internal `@excalidraw/*` package names and localStorage keys stay as they are, for upstream compatibility.
+- Extra canvas fonts use ids 101-108 (`packages/common/src/constants.ts`) so they cannot collide with fonts upstream adds later. Each font folder carries its license file. Adding a font means: woff2 + `index.ts` in `packages/excalidraw/fonts/<Name>/`, an id in `FONT_FAMILY`, metrics in `font-metadata.ts` (read hhea from the font), an `init()` line in `Fonts.ts`, and an icon case in `FontPickerList.tsx`.
+- Programmatic text inserts must load their fonts first (`ensureFontsLoaded` in `canvasOps.ts`); otherwise text is measured with the fallback font and clips.
+- First run: `data/welcomeScene.ts` draws the welcome sheet once (flag `sketchbench-welcome-shown-v1`), and `components/ForkNotice.tsx` shows the notice once (flag `sketchbench-notice-seen-v1`).
 - After editing `excalidraw-app/ai/*`, **reload the tab**: HMR swaps modules but the running bridge keeps its closure over the old `canvasOps`.
 - `convertToExcalidrawElements` derives an arrow binding's `fixedPoint` from the skeleton's own endpoints and only binds to shapes in the same batch. `canvasOps.ts` pre-routes arrows edge-to-edge (`routeBoundArrows`) and binds to existing shapes itself (`bindToExistingShapes`). Moving/resizing uses a scratch `Scene` + `updateBindings`, as the Stats panel does.
 - Deleted elements keep their ids; `addElements` lets new elements reuse them (bumping `version` so collab reconciliation keeps the new one).

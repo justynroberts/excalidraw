@@ -4,6 +4,7 @@ import {
   eyeIcon,
   helpIcon,
   LinkIcon,
+  ExportImageIcon,
 } from "@excalidraw/excalidraw/components/icons";
 import { useI18n } from "@excalidraw/excalidraw/i18n";
 import { MainMenu } from "@excalidraw/excalidraw/index";
@@ -25,6 +26,7 @@ export const AppMainMenu: React.FC<{
   isCollabEnabled: boolean;
   theme: Theme | "system";
   refresh: () => void;
+  onExportPdf: () => void;
 }> = React.memo((props) => {
   const { t } = useI18n();
   return (
@@ -33,6 +35,9 @@ export const AppMainMenu: React.FC<{
       <MainMenu.DefaultItems.SaveToActiveFile />
       <MainMenu.DefaultItems.Export />
       <MainMenu.DefaultItems.SaveAsImage />
+      <MainMenu.Item icon={ExportImageIcon} onSelect={props.onExportPdf}>
+        Export as PDF
+      </MainMenu.Item>
       {props.isCollabEnabled && (
         <MainMenu.DefaultItems.LiveCollaborationTrigger
           isCollaborating={props.isCollaborating}
@@ -45,7 +50,7 @@ export const AppMainMenu: React.FC<{
       <MainMenu.DefaultItems.ClearCanvas />
       <MainMenu.Separator />
       <MainMenu.Item icon={helpIcon} onSelect={openForkNotice}>
-        About Excalidraw-FL
+        About Sketchbench
       </MainMenu.Item>
       <MainMenu.ItemLink icon={LinkIcon} href="https://fintonlabs.com">
         FintonLabs

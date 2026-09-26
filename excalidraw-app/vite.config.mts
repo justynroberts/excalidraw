@@ -133,7 +133,7 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       Sitemap({
-        hostname: "https://excalidraw.com",
+        hostname: envVars.VITE_APP_PUBLIC_URL || "http://localhost:3001",
         outDir: "build",
         changefreq: "monthly",
         // its static in public folder
@@ -226,10 +226,10 @@ export default defineConfig(({ mode }) => {
           maximumFileSizeToCacheInBytes: 2.3 * 1024 ** 2, // 2.3MB
         },
         manifest: {
-          short_name: "Excalidraw",
-          name: "Excalidraw",
+          short_name: "Sketchbench",
+          name: "Sketchbench",
           description:
-            "Excalidraw is a whiteboard tool that lets you easily sketch diagrams that have a hand-drawn feel to them.",
+            "A hand-drawn whiteboard with a Claude AI assistant and an MCP bridge, built on Excalidraw.",
           icons: [
             {
               src: "android-chrome-192x192.png",
@@ -253,9 +253,9 @@ export default defineConfig(({ mode }) => {
             },
           ],
           start_url: "/",
-          id: "excalidraw",
+          id: "sketchbench",
           display: "standalone",
-          theme_color: "#121212",
+          theme_color: "#0b0c0f",
           background_color: "#ffffff",
           file_handlers: [
             {

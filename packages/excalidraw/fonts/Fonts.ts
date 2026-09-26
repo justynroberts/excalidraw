@@ -49,6 +49,7 @@ import { PatrickHandFontFaces } from "./PatrickHand";
 import { GloriaHallelujahFontFaces } from "./GloriaHallelujah";
 import { ShadowsIntoLightFontFaces } from "./ShadowsIntoLight";
 import { GochiHandFontFaces } from "./GochiHand";
+import { OsifontFontFaces } from "./Osifont";
 
 export class Fonts {
   // it's ok to track fonts across multiple instances only once, so let's use
@@ -420,6 +421,7 @@ export class Fonts {
     init("Gloria Hallelujah", ...GloriaHallelujahFontFaces);
     init("Shadows Into Light", ...ShadowsIntoLightFontFaces);
     init("Gochi Hand", ...GochiHandFontFaces);
+    init("Osifont", ...OsifontFontFaces);
 
     // fallback font faces
     init(CJK_HAND_DRAWN_FALLBACK_FONT, ...XiaolaiFontFaces);

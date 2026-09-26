@@ -33,6 +33,14 @@ export interface FontMetadata {
 }
 
 export const FONT_METADATA: Record<number, FontMetadata> = {
+  [FONT_FAMILY.Osifont]: {
+    metrics: {
+      unitsPerEm: 2048,
+      ascender: 2697,
+      descender: -707,
+      lineHeight: 1.35,
+    },
+  },
   [FONT_FAMILY["Architects Daughter"]]: {
     metrics: {
       unitsPerEm: 1024,

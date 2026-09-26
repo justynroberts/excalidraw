@@ -1,4 +1,4 @@
-# Design
+# Design: Sketchbench
 
 |  |  |
 | --- | --- |
@@ -8,6 +8,8 @@
 | **Accent** | Single cyan: `#3fc8e4` on dark, `#0b8fb0` on light. Used for selection, focus, primary buttons and the live marker |
 | **Surfaces** | No shadows anywhere. Islands, menus, dialogs and the sidebar are separated by 1px hairlines (`#20252c`). Radius 2px on controls, 4px maximum |
 | **Motion** | State changes only, 120-150ms ease-out. `prefers-reduced-motion` honoured |
+| **Mark and wordmark** | A pencil-drawn set-square (rough.js strokes, overshooting construction lines, graphite grain), with SKETCHBENCH lettered in osifont (ISO 3098 draughtsman lettering). The wordmark is the one sanctioned exception to the single-typeface rule |
+| **Welcome** | First-run sheet drawn like a draughtsman's drawing: bordered sheet, osifont lettering, a pencil architecture sketch, hand-lettered notes (Architects Daughter) and a title block |
 | **Recognisable idea** | Hairline islands floating on near-black with cyan as the only ink, like a lit drafting table; the AI panel reads as a terminal log (`>` prompts, `ok`/`err` tool rows) |
 
 Recent siblings used per-category palettes (`3d-servicemap`, `ableton-ai`) and a manuscript direction (`2adventure`). This project uses a single cool accent on a monochrome ground, which none of them do.

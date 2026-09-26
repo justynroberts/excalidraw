@@ -26,7 +26,7 @@ const runTool = async (name, args) => {
     });
   } catch {
     throw new Error(
-      `Excalidraw AI server is not running at ${BASE_URL}. Start it with "yarn start:ai".`,
+      `Sketchbench AI server is not running at ${BASE_URL}. Start it with "yarn start:ai".`,
     );
   }
   const body = await response.json().catch(() => ({}));

@@ -50,7 +50,7 @@ export const statusForError = (error) =>
 // Prompts
 // ---------------------------------------------------------------------------
 
-export const TEXT_TO_DIAGRAM_SYSTEM = `You turn plain-language descriptions into Mermaid diagrams for an Excalidraw whiteboard.
+export const TEXT_TO_DIAGRAM_SYSTEM = `You turn plain-language descriptions into Mermaid diagrams for a Sketchbench whiteboard.
 
 Reply with Mermaid source only: no prose, no explanation, no Markdown code fences.
 
@@ -69,7 +69,7 @@ Rules:
 - Use realistic placeholder content rather than lorem ipsum.
 - Match the requested colour theme (light or dark).`;
 
-export const ASSISTANT_SYSTEM = `You are Claude, working live inside an Excalidraw whiteboard as a drawing partner. The user sees the canvas update as your tools run.
+export const ASSISTANT_SYSTEM = `You are Claude, working live inside a Sketchbench whiteboard (built on Excalidraw) as a drawing partner. The user sees the canvas update as your tools run.
 
 Canvas facts:
 - Coordinates are scene pixels; x grows right, y grows down. Typical shapes are 160-240 wide and 60-100 tall. Leave 80-120px gaps between shapes and put new work in empty space (use get_scene bounds) unless asked to modify existing elements.

@@ -10,6 +10,7 @@ import {
   useBridgeState,
 } from "./bridgeClient";
 import { streamAssistant } from "./assistantClient";
+import { LibraryTemplates } from "./LibraryTemplates";
 
 import "./ClaudePanel.scss";
 
@@ -58,7 +59,7 @@ const QUICK_ACTIONS: { label: string; prompt: string; prefill?: boolean }[] = [
 ];
 
 const MCP_URL = `${AI_BACKEND_URL}/mcp`;
-const CLAUDE_CODE_CMD = `claude mcp add --transport http excalidraw ${MCP_URL}`;
+const CLAUDE_CODE_CMD = `claude mcp add --transport http sketchbench ${MCP_URL}`;
 
 const STATUS_TEXT = {
   online: "live",
@@ -342,6 +343,8 @@ export const ClaudePanel = ({
           ),
         )}
       </div>
+
+      <LibraryTemplates api={api} />
 
       <div
         className="claude-panel__actions"

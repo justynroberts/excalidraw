@@ -154,6 +154,7 @@ export const FONT_FAMILY = {
   "Gloria Hallelujah": 105,
   "Shadows Into Light": 106,
   "Gochi Hand": 107,
+  Osifont: 108,
 };
 
 // Segoe UI Emoji fails to properly fallback for some glyphs: ∞, ∫, ≠

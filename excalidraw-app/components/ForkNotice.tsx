@@ -1,4 +1,4 @@
-// "About Excalidraw-FL": says this is a fork, credits upstream Excalidraw, and
+// "About Sketchbench": says this is a fork, credits upstream Excalidraw, and
 // asks people to support the original team via Excalidraw+. Shown once on
 // first visit, then reachable from the main menu and the Claude panel.
 
@@ -6,13 +6,13 @@ import { useEffect, useRef, useSyncExternalStore } from "react";
 
 import "./ForkNotice.scss";
 
-const SEEN_KEY = "excalidraw-fl-notice-seen-v1";
+const SEEN_KEY = "sketchbench-notice-seen-v1";
 
 const PLUS_URL = `${
   import.meta.env.VITE_APP_PLUS_LP
-}/plus?utm_source=excalidraw-fl&utm_medium=app&utm_content=fork_notice`;
+}/plus?utm_source=sketchbench&utm_medium=app&utm_content=fork_notice`;
 const UPSTREAM_URL = "https://github.com/excalidraw/excalidraw";
-const FORK_URL = "https://github.com/justynroberts/excalidraw";
+const FORK_URL = "https://github.com/justynroberts/sketchbench";
 
 let open = false;
 const listeners = new Set<() => void>();
@@ -101,9 +101,9 @@ export const ForkNotice = () => {
     >
       <div className="fork-notice__body">
         <p className="fork-notice__eyebrow">Fork notice</p>
-        <h2 id="fork-notice-title">Excalidraw-FL</h2>
+        <h2 id="fork-notice-title">Sketchbench</h2>
         <p>
-          Excalidraw-FL is a fork of the original{" "}
+          Sketchbench is a fork of the original{" "}
           <a href={UPSTREAM_URL} target="_blank" rel="noopener">
             Excalidraw
           </a>
@@ -113,7 +113,8 @@ export const ForkNotice = () => {
           <li>Claude canvas assistant that draws, edits and critiques</li>
           <li>MCP server, so Claude Code and Claude Desktop can draw here</li>
           <li>Working text-to-diagram and wireframe-to-code</li>
-          <li>Seven extra handwritten and architect fonts</li>
+          <li>Eight extra fonts, including draughtsman lettering</li>
+          <li>PDF, PNG and SVG export</li>
         </ul>
 
         <div className="fork-notice__support">
@@ -133,7 +134,7 @@ export const ForkNotice = () => {
         </div>
 
         <p className="fork-notice__fine">
-          Based on Excalidraw © Excalidraw, MIT License. Not affiliated with or
+          Built on Excalidraw © Excalidraw, MIT License. Not affiliated with or
           endorsed by the Excalidraw team.{" "}
           <a href={FORK_URL} target="_blank" rel="noopener">
             Fork source

@@ -1,8 +1,8 @@
 {
-  "name": "excalidraw-ai-server",
+  "name": "sketchbench-ai-server",
   "version": "0.1.0",
   "private": true,
-  "description": "Claude-powered AI backend and MCP canvas bridge for this Excalidraw fork",
+  "description": "Claude-powered AI backend and MCP canvas bridge for Sketchbench (an Excalidraw fork)",
   "license": "MIT",
   "type": "module",
   "engines": {

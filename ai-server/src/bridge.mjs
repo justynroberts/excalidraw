@@ -63,7 +63,7 @@ export class CanvasBridge {
           this.tabs.set(tabId, {
             socket,
             lastActive: Date.now(),
-            title: String(msg.title || "Excalidraw"),
+            title: String(msg.title || "Sketchbench"),
           });
           this.log(`bridge: tab ${tabId} connected (${this.tabs.size} open)`);
           this.emit();
@@ -117,7 +117,7 @@ export class CanvasBridge {
     if (tabId) {
       const tab = this.tabs.get(tabId);
       if (!tab) {
-        throw new Error("That Excalidraw tab is no longer connected.");
+        throw new Error("That Sketchbench tab is no longer connected.");
       }
       return tab;
     }
@@ -129,7 +129,7 @@ export class CanvasBridge {
     }
     if (!best) {
       throw new Error(
-        "No Excalidraw tab is connected. Open the app (yarn start) and keep the tab open.",
+        "No Sketchbench tab is connected. Open the app (yarn start) and keep the tab open.",
       );
     }
     return best;

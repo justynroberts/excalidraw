@@ -1,4 +1,4 @@
-// Excalidraw AI server.
+// Sketchbench AI server (Claude backend + MCP bridge for this Excalidraw fork).
 //
 //   POST /v1/ai/text-to-diagram/chat-streaming    Mermaid from a description (TTD dialog)
 //   POST /v1/ai/diagram-to-code/generate-streaming  HTML from a wireframe frame
@@ -561,7 +561,7 @@ const server = http.createServer(async (req, res) => {
 bridge.attach(server, "/bridge");
 
 server.listen(PORT, HOST, () => {
-  log(`Excalidraw AI server on http://${HOST}:${PORT} (model ${MODEL})`);
+  log(`Sketchbench AI server on http://${HOST}:${PORT} (model ${MODEL})`);
   log(`MCP endpoint: http://${HOST}:${PORT}/mcp`);
   if (!process.env.ANTHROPIC_API_KEY && !process.env.ANTHROPIC_AUTH_TOKEN) {
     log(

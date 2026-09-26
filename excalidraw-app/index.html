@@ -2,59 +2,37 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Excalidraw Whiteboard</title>
+    <!-- MIT License - Copyright (c) fintonlabs.com. Built on Excalidraw (MIT, (c) Excalidraw). -->
+    <title>Sketchbench</title>
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, shrink-to-fit=no"
     />
     <meta name="referrer" content="origin" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="theme-color" content="#121212" />
+    <meta name="theme-color" content="#0b0c0f" />
 
     <!-- Primary Meta Tags -->
     <meta
       name="title"
-      content="Free, collaborative whiteboard • Hand-drawn look & feel | Excalidraw"
+      content="Sketchbench: a hand-drawn whiteboard with AI and MCP"
     />
     <meta
       name="description"
-      content="Excalidraw is a virtual collaborative whiteboard tool that lets you easily sketch diagrams that have a hand-drawn feel to them."
+      content="Sketchbench is a hand-drawn whiteboard with a Claude AI assistant and an MCP bridge, built on Excalidraw."
     />
-    <meta name="image" content="https://excalidraw.com/og-image-3.png" />
 
-    <!-- Open Graph / Facebook -->
-    <meta property="og:site_name" content="Excalidraw" />
+    <!-- Open Graph -->
+    <meta property="og:site_name" content="Sketchbench" />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://excalidraw.com" />
     <meta
       property="og:title"
-      content="Excalidraw — Collaborative whiteboarding made easy"
+      content="Sketchbench: a hand-drawn whiteboard with AI and MCP"
     />
-    <meta property="og:image:alt" content="Excalidraw logo" />
     <meta
       property="og:description"
-      content="Excalidraw is a virtual collaborative whiteboard tool that lets you easily sketch diagrams that have a hand-drawn feel to them."
+      content="Sketchbench is a hand-drawn whiteboard with a Claude AI assistant and an MCP bridge, built on Excalidraw."
     />
-    <meta property="og:image" content="https://excalidraw.com/og-image-3.png" />
-
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:site" content="@excalidraw" />
-    <meta property="twitter:url" content="https://excalidraw.com" />
-    <meta
-      property="twitter:title"
-      content="Excalidraw — Collaborative whiteboarding made easy"
-    />
-    <meta
-      property="twitter:description"
-      content="Excalidraw is a virtual collaborative whiteboard tool that lets you easily sketch diagrams that have a hand-drawn feel to them."
-    />
-    <meta
-      property="twitter:image"
-      content="https://excalidraw.com/og-image-3.png"
-    />
-
-    <link rel="canonical" href="https://excalidraw.com" />
 
     <!------------------------------------------------------------------------->
     <!--   to minimize white flash on load when user has dark mode enabled   -->
@@ -76,7 +54,8 @@
               ? "dark"
               : "light";
           } else {
-            return theme || "light";
+            // Sketchbench defaults to dark (see useHandleAppTheme.ts)
+            return theme || "dark";
           }
         }
 
@@ -87,7 +66,7 @@
     </script>
     <style>
       html.dark {
-        background-color: #121212;
+        background-color: #0b0c0f;
         color: #fff;
       }
     </style>
@@ -98,24 +77,6 @@
 
     <!------------------------------------------------------------------------->
     <% if (typeof PROD != 'undefined' && PROD == true) { %>
-    <script>
-      // Redirect Excalidraw+ users which have auto-redirect enabled.
-      //
-      // Redirect only the bare root path, so link/room/library urls are not
-      // redirected.
-      //
-      // Putting into index.html for best performance (can't redirect on server
-      // due to location.hash checks).
-      if (
-        window.location.pathname === "/" &&
-        !window.location.hash &&
-        !window.location.search &&
-        // if its present redirect
-        document.cookie.includes("excplus-autoredirect=true")
-      ) {
-        window.location.href = "https://app.excalidraw.com";
-      }
-    </script>
 
     <!-- Following placeholder is replaced during the build step -->
     <!-- PLACEHOLDER:EXCALIDRAW_APP_FONTS -->
@@ -210,7 +171,7 @@
   <body>
     <noscript> You need to enable JavaScript to run this app. </noscript>
     <header>
-      <h1 class="visually-hidden">Excalidraw</h1>
+      <h1 class="visually-hidden">Sketchbench</h1>
     </header>
     <div id="root"></div>
     <script type="module" src="index.tsx"></script>
