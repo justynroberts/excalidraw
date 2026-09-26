@@ -4,6 +4,7 @@ import { useUIAppState } from "@excalidraw/excalidraw/context/ui-appState";
 import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
 
 import { ClaudePanel } from "../ai/ClaudePanel";
+import { useBridgeState } from "../ai/bridgeClient";
 
 export const CLAUDE_SIDEBAR_TAB = "claude";
 
@@ -16,13 +17,14 @@ export const AppSidebar = ({
   excalidrawAPI: ExcalidrawImperativeAPI | null;
 }) => {
   const { openSidebar } = useUIAppState();
+  const { aiEnabled } = useBridgeState();
 
   return (
     <DefaultSidebar>
       <DefaultSidebar.TabTriggers>
         <Sidebar.TabTrigger
           tab={CLAUDE_SIDEBAR_TAB}
-          title="AI assistant"
+          title={aiEnabled ? "AI assistant" : "MCP and templates"}
           style={{
             opacity: openSidebar?.tab === CLAUDE_SIDEBAR_TAB ? 1 : 0.4,
             fontFamily: "var(--ui-font)",
@@ -30,7 +32,7 @@ export const AppSidebar = ({
             fontSize: 11,
           }}
         >
-          AI
+          {aiEnabled ? "AI" : "MCP"}
         </Sidebar.TabTrigger>
       </DefaultSidebar.TabTriggers>
       <Sidebar.Tab tab={CLAUDE_SIDEBAR_TAB} className="app-sidebar-claude-tab">

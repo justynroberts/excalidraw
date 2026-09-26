@@ -136,6 +136,7 @@ export const ClaudePanel = ({
   api: ExcalidrawImperativeAPI | null;
 }) => {
   const bridge = useBridgeState();
+  const { aiEnabled } = bridge;
   const [turns, setTurns] = useState<Turn[]>([]);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
@@ -266,8 +267,8 @@ export const ClaudePanel = ({
   return (
     <div className="claude-panel">
       <header className="claude-panel__head">
-        <span className="claude-panel__title">AI</span>
-        <span className="claude-panel__muted">Claude</span>
+        <span className="claude-panel__title">{aiEnabled ? "AI" : "MCP"}</span>
+        {aiEnabled && <span className="claude-panel__muted">Claude</span>}
         <span
           className={`claude-panel__status claude-panel__status--${bridge.status}`}
           role="status"
@@ -287,139 +288,155 @@ export const ClaudePanel = ({
         <AboutButton />
       </header>
 
-      <div className="claude-panel__log" ref={logRef} aria-live="polite">
-        {turns.length === 0 && (
-          <div className="claude-panel__intro">
-            <p>
-              Ask for a diagram, point at a selection, or have Claude look at
-              the canvas and improve it. Every change is one undo away.
-            </p>
-            {offline && (
-              <p className="claude-panel__warn">
-                AI server not reachable at {AI_BACKEND_URL}. Run{" "}
-                <code>yarn start:ai</code>.
+      {!aiEnabled && (
+        <div className="claude-panel__intro claude-panel__intro--compact">
+          <p>
+            {offline
+              ? `Server not reachable at ${AI_BACKEND_URL}.`
+              : "AI chat is off: this server has no Claude key. Claude Code and Claude Desktop can still draw here over MCP (below)."}
+          </p>
+        </div>
+      )}
+
+      {aiEnabled && (
+        <div className="claude-panel__log" ref={logRef} aria-live="polite">
+          {turns.length === 0 && (
+            <div className="claude-panel__intro">
+              <p>
+                Ask for a diagram, point at a selection, or have Claude look at
+                the canvas and improve it. Every change is one undo away.
               </p>
-            )}
-          </div>
-        )}
-        {turns.map((turn, index) =>
-          turn.kind === "user" ? (
-            <div
-              key={index}
-              className="claude-panel__turn claude-panel__turn--user"
-            >
-              <span className="claude-panel__prompt" aria-hidden="true">
-                &gt;
-              </span>
-              <span>{turn.text}</span>
-            </div>
-          ) : (
-            <div key={index} className="claude-panel__turn">
-              {turn.tools.map((row) => (
-                <div
-                  key={row.id}
-                  className={`claude-panel__tool claude-panel__tool--${row.state}`}
-                >
-                  <span className="claude-panel__tool-state">
-                    {row.state === "running"
-                      ? "···"
-                      : row.state === "done"
-                      ? "ok"
-                      : "err"}
-                  </span>
-                  {row.summary}
-                </div>
-              ))}
-              {turn.text && (
-                <div className="claude-panel__text">{turn.text}</div>
-              )}
-              {turn.pending && !turn.text && turn.tools.length === 0 && (
-                <div className="claude-panel__muted">
-                  {turn.thinking ? "thinking" : "working"}
-                </div>
-              )}
-              {turn.error && (
-                <div className="claude-panel__error">{turn.error}</div>
+              {offline && (
+                <p className="claude-panel__warn">
+                  AI server not reachable at {AI_BACKEND_URL}. Run{" "}
+                  <code>yarn start:ai</code>.
+                </p>
               )}
             </div>
-          ),
-        )}
-      </div>
+          )}
+          {turns.map((turn, index) =>
+            turn.kind === "user" ? (
+              <div
+                key={index}
+                className="claude-panel__turn claude-panel__turn--user"
+              >
+                <span className="claude-panel__prompt" aria-hidden="true">
+                  &gt;
+                </span>
+                <span>{turn.text}</span>
+              </div>
+            ) : (
+              <div key={index} className="claude-panel__turn">
+                {turn.tools.map((row) => (
+                  <div
+                    key={row.id}
+                    className={`claude-panel__tool claude-panel__tool--${row.state}`}
+                  >
+                    <span className="claude-panel__tool-state">
+                      {row.state === "running"
+                        ? "···"
+                        : row.state === "done"
+                        ? "ok"
+                        : "err"}
+                    </span>
+                    {row.summary}
+                  </div>
+                ))}
+                {turn.text && (
+                  <div className="claude-panel__text">{turn.text}</div>
+                )}
+                {turn.pending && !turn.text && turn.tools.length === 0 && (
+                  <div className="claude-panel__muted">
+                    {turn.thinking ? "thinking" : "working"}
+                  </div>
+                )}
+                {turn.error && (
+                  <div className="claude-panel__error">{turn.error}</div>
+                )}
+              </div>
+            ),
+          )}
+        </div>
+      )}
 
       <LibraryTemplates api={api} />
 
-      <div
-        className="claude-panel__actions"
-        role="group"
-        aria-label="Quick actions"
-      >
-        {QUICK_ACTIONS.map((action) => (
-          <button
-            key={action.label}
-            type="button"
-            className="claude-panel__chip"
-            disabled={busy || offline}
-            onClick={() => {
-              if (action.prefill) {
-                setDraft(action.prompt);
-                inputRef.current?.focus();
-              } else {
-                send(action.prompt);
+      {aiEnabled && (
+        <div
+          className="claude-panel__actions"
+          role="group"
+          aria-label="Quick actions"
+        >
+          {QUICK_ACTIONS.map((action) => (
+            <button
+              key={action.label}
+              type="button"
+              className="claude-panel__chip"
+              disabled={busy || offline}
+              onClick={() => {
+                if (action.prefill) {
+                  setDraft(action.prompt);
+                  inputRef.current?.focus();
+                } else {
+                  send(action.prompt);
+                }
+              }}
+            >
+              {action.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {aiEnabled && (
+        <form
+          className="claude-panel__composer"
+          onSubmit={(event) => {
+            event.preventDefault();
+            send(draft);
+          }}
+        >
+          <textarea
+            ref={inputRef}
+            value={draft}
+            rows={3}
+            placeholder="Draw a checkout flow with retries…"
+            aria-label="Message Claude"
+            onChange={(event) => setDraft(event.target.value)}
+            onKeyDown={(event) => {
+              // Keep keystrokes away from the editor's global shortcuts.
+              event.stopPropagation();
+              if (
+                event.key === "Enter" &&
+                !event.shiftKey &&
+                !event.nativeEvent.isComposing
+              ) {
+                event.preventDefault();
+                send(draft);
               }
             }}
-          >
-            {action.label}
-          </button>
-        ))}
-      </div>
+          />
+          {busy ? (
+            <button
+              type="button"
+              className="claude-panel__send"
+              onClick={() => abortRef.current?.abort()}
+            >
+              Stop
+            </button>
+          ) : (
+            <button
+              type="submit"
+              className="claude-panel__send"
+              disabled={!draft.trim() || offline}
+            >
+              Send
+            </button>
+          )}
+        </form>
+      )}
 
-      <form
-        className="claude-panel__composer"
-        onSubmit={(event) => {
-          event.preventDefault();
-          send(draft);
-        }}
-      >
-        <textarea
-          ref={inputRef}
-          value={draft}
-          rows={3}
-          placeholder="Draw a checkout flow with retries…"
-          aria-label="Message Claude"
-          onChange={(event) => setDraft(event.target.value)}
-          onKeyDown={(event) => {
-            // Keep keystrokes away from the editor's global shortcuts.
-            event.stopPropagation();
-            if (
-              event.key === "Enter" &&
-              !event.shiftKey &&
-              !event.nativeEvent.isComposing
-            ) {
-              event.preventDefault();
-              send(draft);
-            }
-          }}
-        />
-        {busy ? (
-          <button
-            type="button"
-            className="claude-panel__send"
-            onClick={() => abortRef.current?.abort()}
-          >
-            Stop
-          </button>
-        ) : (
-          <button
-            type="submit"
-            className="claude-panel__send"
-            disabled={!draft.trim() || offline}
-          >
-            Send
-          </button>
-        )}
-      </form>
-
-      <details className="claude-panel__mcp">
+      <details className="claude-panel__mcp" open={!aiEnabled}>
         <summary>
           MCP
           {externalActivity.length > 0 && (

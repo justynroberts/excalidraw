@@ -24,6 +24,12 @@ type BridgeState = {
   status: BridgeStatus;
   tabId: string;
   activity: readonly BridgeActivity[];
+  /**
+   * Whether the server has a Claude API key. Without one the server-side AI
+   * (assistant chat, text-to-diagram, wireframe-to-code) is hidden; MCP still
+   * works because MCP clients bring their own Claude.
+   */
+  aiEnabled: boolean;
 };
 
 const MAX_ACTIVITY = 30;
@@ -80,6 +86,7 @@ let state: BridgeState = {
   status: "offline",
   tabId: getTabId(),
   activity: [],
+  aiEnabled: false,
 };
 const listeners = new Set<() => void>();
 
@@ -102,6 +109,17 @@ export const useBridgeState = () =>
     },
     () => state,
   );
+
+/** Ask the server what it can do (currently: whether Claude is configured). */
+const refreshCapabilities = async () => {
+  try {
+    const response = await fetch(`${AI_BACKEND_URL}/health`);
+    const health = await response.json();
+    setState({ aiEnabled: health?.credentials === true });
+  } catch {
+    setState({ aiEnabled: false });
+  }
+};
 
 export const startBridge = (api: ExcalidrawImperativeAPI) => {
   if (!AI_BACKEND_URL) {
@@ -170,6 +188,7 @@ export const startBridge = (api: ExcalidrawImperativeAPI) => {
         onFocus();
       }
       setState({ status: "online" });
+      refreshCapabilities();
     };
     socket.onmessage = (event) => {
       let msg: any;

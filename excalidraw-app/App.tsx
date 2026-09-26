@@ -138,7 +138,7 @@ import { ForkNotice } from "./components/ForkNotice";
 import { FullscreenToggle } from "./components/FullscreenToggle";
 import { exportToPdf } from "./data/exportPdf";
 import { maybeShowWelcomeScene } from "./data/welcomeScene";
-import { startBridge } from "./ai/bridgeClient";
+import { startBridge, useBridgeState } from "./ai/bridgeClient";
 
 import type { CollabAPI } from "./collab/Collab";
 
@@ -365,6 +365,8 @@ const initializeScene = async (opts: {
 
 const ExcalidrawWrapper = () => {
   const excalidrawAPI = useExcalidrawAPI();
+  // Server-side AI only shows when the AI server has a Claude key.
+  const { aiEnabled } = useBridgeState();
 
   const [errorMessage, setErrorMessage] = useState("");
   const isCollabDisabled = isRunningInIframe();
@@ -933,6 +935,7 @@ const ExcalidrawWrapper = () => {
         handleKeyboardGlobally={true}
         autoFocus={true}
         theme={editorTheme}
+        aiEnabled={aiEnabled}
         onThemeChange={setAppTheme}
         renderTopRightUI={(isMobile) => {
           if (isMobile) {
@@ -947,7 +950,11 @@ const ExcalidrawWrapper = () => {
               type="button"
               className="claude-trigger"
               aria-pressed={claudeOpen}
-              title="AI assistant (Claude)"
+              title={
+                aiEnabled
+                  ? "AI assistant (Claude)"
+                  : "MCP and templates (no Claude key on the server)"
+              }
               onClick={() =>
                 excalidrawAPI?.toggleSidebar({
                   name: "default",
@@ -956,7 +963,7 @@ const ExcalidrawWrapper = () => {
                 })
               }
             >
-              AI
+              {aiEnabled ? "AI" : "MCP"}
             </button>
           );
 
@@ -1020,9 +1027,11 @@ const ExcalidrawWrapper = () => {
           <OverwriteConfirmDialog.Actions.SaveToDisk />
         </OverwriteConfirmDialog>
         <AppFooter onChange={() => excalidrawAPI?.refresh()} />
-        {excalidrawAPI && <AIComponents excalidrawAPI={excalidrawAPI} />}
+        {excalidrawAPI && aiEnabled && (
+          <AIComponents excalidrawAPI={excalidrawAPI} />
+        )}
 
-        <TTDDialogTrigger />
+        {aiEnabled && <TTDDialogTrigger />}
         {isCollaborating && isOffline && (
           <div className="alertalert--warning">
             {t("alerts.collabOfflineWarning")}
