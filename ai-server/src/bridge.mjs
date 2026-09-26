@@ -1,24 +1,38 @@
-// WebSocket bridge between this server and open Excalidraw tabs.
+// WebSocket bridge between this server and open Sketchbench tabs.
 //
 // The canvas only exists in the browser, so tool calls from MCP clients and the
-// in-app assistant are relayed to a tab and its reply is awaited. Tabs report
-// focus, and calls without an explicit tab go to the most recently focused one.
+// in-app assistant are relayed to a tab and its reply is awaited.
+//
+// Tabs identify themselves with two secrets generated in the browser:
+//   tabId    - one per tab; the in-app assistant targets its own tab by it.
+//   pairing  - one per browser (localStorage); MCP clients present it as a
+//              bearer token and only ever reach tabs that share it.
+// With REQUIRE_PAIRING (public deployments) a call without a matching pairing
+// token is refused, so no visitor can reach another visitor's canvas.
 
 import { randomUUID } from "node:crypto";
 
 import { WebSocketServer } from "ws";
 
 const CALL_TIMEOUT_MS = 30_000;
+const SECRET_PATTERN = /^[A-Za-z0-9_-]{16,128}$/;
+
+export const isValidSecret = (value) =>
+  typeof value === "string" && SECRET_PATTERN.test(value);
 
 export class CanvasBridge {
-  constructor({ allowedOrigins, log }) {
+  constructor({ allowedOrigins, requirePairing, log }) {
     this.allowedOrigins = allowedOrigins;
+    this.requirePairing = requirePairing;
     this.log = log;
-    /** @type {Map<string, {socket: import("ws").WebSocket, lastActive: number, title: string}>} */
+    /** @type {Map<string, {socket: import("ws").WebSocket, pairing: string | null, lastActive: number}>} */
     this.tabs = new Map();
+    /** @type {Map<string, {resolve: Function, reject: Function, timer: NodeJS.Timeout, socket: import("ws").WebSocket}>} */
     this.pending = new Map();
-    this.listeners = new Set();
-    this.wss = new WebSocketServer({ noServer: true });
+    this.wss = new WebSocketServer({
+      noServer: true,
+      maxPayload: 32 * 1024 * 1024,
+    });
   }
 
   /** Attach to an http.Server's upgrade event on the given path. */
@@ -59,32 +73,47 @@ export class CanvasBridge {
 
       switch (msg.type) {
         case "hello": {
-          tabId = String(msg.tabId || randomUUID());
-          this.tabs.set(tabId, {
-            socket,
-            lastActive: Date.now(),
-            title: String(msg.title || "Sketchbench"),
-          });
-          this.log(`bridge: tab ${tabId} connected (${this.tabs.size} open)`);
-          this.emit();
+          if (!isValidSecret(msg.tabId)) {
+            socket.close(1008, "invalid tab id");
+            return;
+          }
+          const pairing = isValidSecret(msg.pairing) ? msg.pairing : null;
+          if (this.requirePairing && !pairing) {
+            socket.close(1008, "pairing token required");
+            return;
+          }
+          // A tab id already held by another browser can't be taken over.
+          const existing = this.tabs.get(msg.tabId);
+          if (
+            existing &&
+            existing.socket !== socket &&
+            existing.pairing !== pairing
+          ) {
+            socket.close(1008, "tab id in use");
+            return;
+          }
+          tabId = msg.tabId;
+          this.tabs.set(tabId, { socket, pairing, lastActive: Date.now() });
+          this.log(`bridge: tab connected (${this.tabs.size} open)`);
           break;
         }
         case "focus": {
           const tab = tabId && this.tabs.get(tabId);
-          if (tab) {
+          if (tab && tab.socket === socket) {
             tab.lastActive = Date.now();
           }
           break;
         }
         case "result": {
           const pending = this.pending.get(msg.id);
-          if (!pending) {
+          // Only the tab that was asked may answer.
+          if (!pending || pending.socket !== socket) {
             return;
           }
           this.pending.delete(msg.id);
           clearTimeout(pending.timer);
           if (msg.error) {
-            pending.reject(new Error(msg.error));
+            pending.reject(new Error(String(msg.error)));
           } else {
             pending.resolve(msg.result);
           }
@@ -96,62 +125,67 @@ export class CanvasBridge {
     socket.on("close", () => {
       if (tabId && this.tabs.get(tabId)?.socket === socket) {
         this.tabs.delete(tabId);
-        this.log(`bridge: tab ${tabId} disconnected (${this.tabs.size} open)`);
-        this.emit();
+        this.log(`bridge: tab disconnected (${this.tabs.size} open)`);
+      }
+      for (const [id, pending] of this.pending) {
+        if (pending.socket === socket) {
+          this.pending.delete(id);
+          clearTimeout(pending.timer);
+          pending.reject(new Error("The Sketchbench tab closed."));
+        }
       }
     });
   }
 
-  /** Current tab count, pushed to every tab so each can show MCP status. */
-  emit() {
-    const payload = JSON.stringify({ type: "status", tabs: this.tabs.size });
-    for (const tab of this.tabs.values()) {
-      tab.socket.send(payload);
+  /**
+   * Resolve the tab a call should go to.
+   * @param {{tabId?: string, pairing?: string | null}} target
+   */
+  pickTab({ tabId, pairing } = {}) {
+    if (this.requirePairing && !pairing) {
+      throw new Error(
+        "A pairing token is required. Copy the MCP command from the AI panel in Sketchbench.",
+      );
     }
-    for (const listener of this.listeners) {
-      listener(this.tabs.size);
-    }
-  }
-
-  pickTab(tabId) {
     if (tabId) {
       const tab = this.tabs.get(tabId);
-      if (!tab) {
-        throw new Error("That Sketchbench tab is no longer connected.");
+      if (
+        !tab ||
+        (pairing && tab.pairing !== pairing) ||
+        (this.requirePairing && tab.pairing !== pairing)
+      ) {
+        throw new Error("That Sketchbench tab is not connected.");
       }
       return tab;
     }
     let best = null;
     for (const tab of this.tabs.values()) {
+      if (pairing && tab.pairing !== pairing) {
+        continue;
+      }
       if (!best || tab.lastActive > best.lastActive) {
         best = tab;
       }
     }
     if (!best) {
       throw new Error(
-        "No Sketchbench tab is connected. Open the app (yarn start) and keep the tab open.",
+        "No Sketchbench tab is connected for this token. Open Sketchbench in your browser and keep the tab open.",
       );
     }
     return best;
   }
 
   /** Invoke a canvas method in a tab and await its result. */
-  call(method, params, tabId) {
-    const tab = this.pickTab(tabId);
+  call(method, params, target) {
+    const tab = this.pickTab(target);
     const id = randomUUID();
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
         this.pending.delete(id);
         reject(new Error(`Canvas did not answer ${method} within 30s.`));
       }, CALL_TIMEOUT_MS);
-      this.pending.set(id, { resolve, reject, timer });
+      this.pending.set(id, { resolve, reject, timer, socket: tab.socket });
       tab.socket.send(JSON.stringify({ type: "call", id, method, params }));
     });
-  }
-
-  /** Broadcast a non-call event (e.g. assistant activity) to one tab. */
-  notify(tabId, event) {
-    const tab = tabId ? this.tabs.get(tabId) : null;
-    tab?.socket.send(JSON.stringify({ type: "event", ...event }));
   }
 }

@@ -6,6 +6,7 @@ import { openForkNotice } from "../components/ForkNotice";
 
 import {
   AI_BACKEND_URL,
+  PAIRING_TOKEN,
   setAssistantBusy,
   useBridgeState,
 } from "./bridgeClient";
@@ -59,7 +60,8 @@ const QUICK_ACTIONS: { label: string; prompt: string; prefill?: boolean }[] = [
 ];
 
 const MCP_URL = `${AI_BACKEND_URL}/mcp`;
-const CLAUDE_CODE_CMD = `claude mcp add --transport http sketchbench ${MCP_URL}`;
+// The pairing token scopes MCP to this browser's tabs (see bridgeClient.ts).
+const CLAUDE_CODE_CMD = `claude mcp add --transport http sketchbench ${MCP_URL} --header "Authorization: Bearer ${PAIRING_TOKEN}"`;
 
 const STATUS_TEXT = {
   online: "live",
@@ -429,13 +431,16 @@ export const ClaudePanel = ({
           )}
         </summary>
         <p className="claude-panel__muted">
-          Let Claude Code or Claude Desktop draw on this tab.
+          Let Claude Code or Claude Desktop draw here. The command carries your
+          private pairing token: it only reaches this browser's Sketchbench
+          tabs, so don't share it.
         </p>
         <CopyLine text={CLAUDE_CODE_CMD} />
         <p className="claude-panel__muted">
-          Claude Desktop: see <code>ai-server/README.md</code> for the stdio
-          config.
+          Claude Desktop uses the stdio shim with this token (see{" "}
+          <code>ai-server/README.md</code>):
         </p>
+        <CopyLine text={PAIRING_TOKEN} />
         {externalActivity.length > 0 && (
           <ul className="claude-panel__activity">
             {externalActivity.map((a) => (

@@ -31,6 +31,36 @@ const RECONNECT_MAX_MS = 15_000;
 
 export const AI_BACKEND_URL = import.meta.env.VITE_APP_AI_BACKEND as string;
 
+/**
+ * One pairing token per browser. MCP clients present it as a bearer token and
+ * the server routes their calls only to tabs holding the same token, so on a
+ * shared deployment nobody can reach anyone else's canvas.
+ */
+const getPairingToken = () => {
+  const key = "sketchbench-pairing-token";
+  try {
+    const existing = localStorage.getItem(key);
+    if (existing && /^[A-Za-z0-9_-]{32,128}$/.test(existing)) {
+      return existing;
+    }
+  } catch {
+    // storage unavailable: fall through to a per-session token
+  }
+  const bytes = crypto.getRandomValues(new Uint8Array(24));
+  const token = btoa(String.fromCharCode(...bytes))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+  try {
+    localStorage.setItem(key, token);
+  } catch {
+    // ignore
+  }
+  return token;
+};
+
+export const PAIRING_TOKEN = getPairingToken();
+
 const getTabId = () => {
   const key = "excalidraw-ai-tab-id";
   try {
@@ -133,7 +163,7 @@ export const startBridge = (api: ExcalidrawImperativeAPI) => {
         JSON.stringify({
           type: "hello",
           tabId: state.tabId,
-          title: document.title,
+          pairing: PAIRING_TOKEN,
         }),
       );
       if (document.hasFocus()) {

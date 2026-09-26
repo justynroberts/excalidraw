@@ -7,16 +7,19 @@
 //   POST /v1/canvas/tools/:name                   Tool relay used by the stdio MCP shim
 //   GET  /health                                  Status
 //   WS   /bridge                                  Browser tabs connect here
+//   *    /api/v2/*                                Scene/file/room storage (storage.mjs)
 //
-// Binds to localhost only. The canvas tools act on the user's open tab, so the
-// server refuses cross-origin browser requests from anything but the app.
+// Locally it binds to localhost and needs no configuration. For a public
+// deployment set REQUIRE_PAIRING=true (MCP and the assistant only reach the
+// caller's own tabs), ALLOWED_ORIGINS / ALLOWED_HOSTS, TRUST_PROXY=true behind
+// a reverse proxy, and the AI_DAILY_LIMIT_* caps that protect the API key.
 
 import http from "node:http";
 import { fileURLToPath } from "node:url";
 
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 
-import { CanvasBridge } from "./bridge.mjs";
+import { CanvasBridge, isValidSecret } from "./bridge.mjs";
 import {
   ASSISTANT_SYSTEM,
   DIAGRAM_TO_CODE_SYSTEM,
@@ -28,6 +31,8 @@ import {
   statusForError,
 } from "./claude.mjs";
 import { createMcpServer } from "./mcp.mjs";
+import { DailyLimiter, clientIp } from "./ratelimit.mjs";
+import { SceneStorage } from "./storage.mjs";
 import {
   CANVAS_TOOLS,
   runCanvasTool,
@@ -46,6 +51,27 @@ const HOST = process.env.AI_SERVER_HOST || "localhost";
 const MAX_BODY_BYTES = 20 * 1024 * 1024;
 const MAX_ASSISTANT_TURNS = 16;
 
+const env = process.env;
+const REQUIRE_PAIRING = env.REQUIRE_PAIRING === "true";
+const TRUST_PROXY = env.TRUST_PROXY === "true";
+const DATA_DIR =
+  env.DATA_DIR || fileURLToPath(new URL("../data", import.meta.url));
+const ALLOWED_HOSTS = (env.ALLOWED_HOSTS || "")
+  .split(",")
+  .map((host) => host.trim().toLowerCase())
+  .filter(Boolean);
+
+// Claude-backed requests: per visitor per day, and for the whole server.
+const aiLimiter = new DailyLimiter({
+  perIp: Number(env.AI_DAILY_LIMIT_PER_IP ?? 0),
+  total: Number(env.AI_DAILY_LIMIT_TOTAL ?? 0),
+});
+// Uploads to storage (share links, files, room saves).
+const uploadLimiter = new DailyLimiter({
+  perIp: Number(env.UPLOAD_DAILY_LIMIT_PER_IP ?? 0),
+  total: 0,
+});
+
 const ALLOWED_ORIGINS = [
   /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/,
   ...(process.env.ALLOWED_ORIGINS || "")
@@ -57,7 +83,58 @@ const ALLOWED_ORIGINS = [
 const log = (...args) =>
   console.log(new Date().toISOString().slice(11, 19), ...args);
 
-const bridge = new CanvasBridge({ allowedOrigins: ALLOWED_ORIGINS, log });
+const bridge = new CanvasBridge({
+  allowedOrigins: ALLOWED_ORIGINS,
+  requirePairing: REQUIRE_PAIRING,
+  log,
+});
+const storage = new SceneStorage({ dataDir: DATA_DIR, log });
+
+/** Pairing token from `Authorization: Bearer`, `X-Sketchbench-Token` or `?token=`. */
+const pairingFrom = (req, url) => {
+  const auth = String(req.headers.authorization || "");
+  const candidate =
+    (auth.toLowerCase().startsWith("bearer ") ? auth.slice(7).trim() : "") ||
+    String(req.headers["x-sketchbench-token"] || "") ||
+    url.searchParams.get("token") ||
+    "";
+  return isValidSecret(candidate) ? candidate : null;
+};
+
+/** Spend one AI unit for this visitor, or answer 429. */
+const takeAiUnit = (req, res) => {
+  const result = aiLimiter.take(clientIp(req, TRUST_PROXY));
+  if (result.limit > 0) {
+    res.setHeader("X-Ratelimit-Limit", String(result.limit));
+    res.setHeader(
+      "X-Ratelimit-Remaining",
+      String(Math.max(result.remaining, 0)),
+    );
+  }
+  if (!result.ok) {
+    sendJSON(res, 429, {
+      statusCode: 429,
+      message:
+        result.reason === "total"
+          ? "Sketchbench has reached today's AI limit. Please try again tomorrow."
+          : "You've reached today's AI limit. Please try again tomorrow.",
+    });
+    return false;
+  }
+  return true;
+};
+
+const takeUploadUnit = (req, res) => {
+  const result = uploadLimiter.take(clientIp(req, TRUST_PROXY));
+  if (!result.ok) {
+    sendJSON(res, 429, {
+      statusCode: 429,
+      message: "Upload limit reached for today.",
+    });
+    return false;
+  }
+  return true;
+};
 
 // ---------------------------------------------------------------------------
 // HTTP helpers
@@ -70,12 +147,18 @@ const setCors = (req, res) => {
   if (origin && isAllowedOrigin(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
     res.setHeader("Vary", "Origin");
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
+    res.setHeader(
+      "Access-Control-Allow-Methods",
+      "GET, POST, PUT, DELETE, OPTIONS",
+    );
     res.setHeader(
       "Access-Control-Allow-Headers",
-      "Content-Type, Accept, Mcp-Session-Id, Mcp-Protocol-Version, X-Excalidraw-Bridge",
+      "Content-Type, Accept, Authorization, Mcp-Session-Id, Mcp-Protocol-Version, X-Excalidraw-Bridge, X-Sketchbench-Token",
     );
-    res.setHeader("Access-Control-Expose-Headers", "Mcp-Session-Id");
+    res.setHeader(
+      "Access-Control-Expose-Headers",
+      "Mcp-Session-Id, X-Ratelimit-Limit, X-Ratelimit-Remaining",
+    );
   }
 };
 
@@ -229,6 +312,9 @@ const textToDiagram = async (req, res) => {
       message: "Expected a conversation ending with a user message.",
     });
   }
+  if (!takeAiUnit(req, res)) {
+    return;
+  }
   log(`ttd: ${history.length} message(s)`);
   await streamText(
     req,
@@ -248,6 +334,9 @@ const diagramToCode = async (req, res) => {
   );
   if (!match) {
     return sendJSON(res, 400, { message: "Expected a base64 image data URL." });
+  }
+  if (!takeAiUnit(req, res)) {
+    return;
   }
   log("d2c: generating prototype");
   await streamText(
@@ -308,18 +397,24 @@ const assistantTools = CANVAS_TOOLS.map((tool) => ({
 }));
 
 const assistant = async (req, res) => {
-  const { messages, tabId, selectedIds } = await readJSON(req);
+  const { messages, tabId, pairing, selectedIds } = await readJSON(req);
   const history = toLLMMessages(messages);
   if (!history.length || history[history.length - 1].role !== "user") {
     return sendJSON(res, 400, {
       message: "Expected a conversation ending with a user message.",
     });
   }
-  if (!tabId || !bridge.tabs.has(tabId)) {
+  const target = { tabId, pairing: isValidSecret(pairing) ? pairing : null };
+  try {
+    bridge.pickTab(target);
+  } catch {
     return sendJSON(res, 409, {
       message:
         "This tab is not connected to the AI server yet. Wait a second and retry.",
     });
+  }
+  if (!takeAiUnit(req, res)) {
+    return;
   }
 
   // Selection is volatile, so it rides on the latest user turn, not the system prompt.
@@ -339,7 +434,7 @@ const assistant = async (req, res) => {
     current?.abort();
   });
 
-  log(`assistant: ${history.length} message(s), tab ${tabId}`);
+  log(`assistant: ${history.length} message(s)`);
   try {
     for (let turn = 0; turn < MAX_ASSISTANT_TURNS && !aborted; turn++) {
       current = client.beta.messages.stream(
@@ -415,7 +510,7 @@ const assistant = async (req, res) => {
           const content = await runCanvasTool(
             block.name,
             block.input,
-            (method, params) => bridge.call(method, params, tabId),
+            (method, params) => bridge.call(method, params, target),
           );
           results.push({
             type: "tool_result",
@@ -460,10 +555,12 @@ const assistant = async (req, res) => {
   }
 };
 
-const runToolForRelay = (name, args) =>
-  runCanvasTool(name, args, (method, params) => bridge.call(method, params));
+const runToolFor = (pairing) => (name, args) =>
+  runCanvasTool(name, args, (method, params) =>
+    bridge.call(method, params, { pairing }),
+  );
 
-const canvasToolRelay = async (req, res, name) => {
+const canvasToolRelay = async (req, res, name, pairing) => {
   // Custom header forces a CORS preflight, which foreign origins fail.
   if (req.headers["x-excalidraw-bridge"] !== "1") {
     return sendJSON(res, 403, { error: "Missing X-Excalidraw-Bridge header." });
@@ -474,15 +571,16 @@ const canvasToolRelay = async (req, res, name) => {
     return sendJSON(res, 400, { error: invalid });
   }
   try {
-    sendJSON(res, 200, { content: await runToolForRelay(name, args) });
+    sendJSON(res, 200, { content: await runToolFor(pairing)(name, args) });
   } catch (error) {
     sendJSON(res, 502, { error: error?.message || String(error) });
   }
 };
 
-const mcpHttp = async (req, res) => {
-  // Stateless Streamable HTTP: a fresh server + transport per request.
-  const server = createMcpServer(runToolForRelay);
+const mcpHttp = async (req, res, pairing) => {
+  // Stateless Streamable HTTP: a fresh server + transport per request, bound
+  // to the caller's pairing token so it can only reach their own tabs.
+  const server = createMcpServer(runToolFor(pairing));
   const transport = new StreamableHTTPServerTransport({
     sessionIdGenerator: undefined,
   });
@@ -497,9 +595,10 @@ const mcpHttp = async (req, res) => {
 
 // ---------------------------------------------------------------------------
 
-const isLocalHost = (host = "") =>
+const isAllowedHost = (host = "") =>
   /^(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(host) ||
-  process.env.ALLOW_ANY_HOST === "true";
+  ALLOWED_HOSTS.includes(host.toLowerCase().replace(/:\d+$/, "")) ||
+  env.ALLOW_ANY_HOST === "true";
 
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, "http://localhost");
@@ -507,7 +606,7 @@ const server = http.createServer(async (req, res) => {
 
   // DNS-rebinding and cross-site guard.
   if (
-    !isLocalHost(req.headers.host) ||
+    !isAllowedHost(req.headers.host) ||
     (req.headers.origin && !isAllowedOrigin(req.headers.origin))
   ) {
     return sendJSON(res, 403, { message: "Forbidden origin." });
@@ -522,14 +621,23 @@ const server = http.createServer(async (req, res) => {
       return sendJSON(res, 200, {
         ok: true,
         model: MODEL,
-        tabs: bridge.tabs.size,
+        ...(REQUIRE_PAIRING ? {} : { tabs: bridge.tabs.size }),
+        storage: true,
         credentials: Boolean(
           process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN,
         ),
       });
     }
     if (url.pathname === "/mcp") {
-      return await mcpHttp(req, res);
+      return await mcpHttp(req, res, pairingFrom(req, url));
+    }
+    if (
+      await storage.handle(req, res, url.pathname, {
+        sendJSON,
+        onUpload: takeUploadUnit,
+      })
+    ) {
+      return;
     }
     if (req.method === "POST") {
       switch (url.pathname) {
@@ -542,7 +650,7 @@ const server = http.createServer(async (req, res) => {
       }
       const relay = /^\/v1\/canvas\/tools\/([a-z_]+)$/.exec(url.pathname);
       if (relay) {
-        return await canvasToolRelay(req, res, relay[1]);
+        return await canvasToolRelay(req, res, relay[1], pairingFrom(req, url));
       }
     }
     sendJSON(res, 404, { message: "Not found" });
@@ -560,9 +668,17 @@ const server = http.createServer(async (req, res) => {
 
 bridge.attach(server, "/bridge");
 
+// Fail loudly at boot if storage isn't writable, not on the first save.
+await storage.init();
+
 server.listen(PORT, HOST, () => {
   log(`Sketchbench AI server on http://${HOST}:${PORT} (model ${MODEL})`);
   log(`MCP endpoint: http://${HOST}:${PORT}/mcp`);
+  log(
+    `pairing ${REQUIRE_PAIRING ? "required" : "optional"}; AI limits ${
+      aiLimiter.perIp || "∞"
+    }/visitor/day, ${aiLimiter.total || "∞"}/day total`,
+  );
   if (!process.env.ANTHROPIC_API_KEY && !process.env.ANTHROPIC_AUTH_TOKEN) {
     log(
       "warning: no ANTHROPIC_API_KEY set; AI routes will fail until one is provided",

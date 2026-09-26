@@ -15,6 +15,11 @@ interface ImportMetaEnv {
   VITE_APP_PORTAL_URL: string;
   VITE_APP_AI_BACKEND: string;
 
+  // Sketchbench: self-hosted storage replacing Firebase (see data/firebase.ts)
+  VITE_APP_STORAGE_BACKEND?: string;
+  // Sketchbench: public origin, used for the sitemap
+  VITE_APP_PUBLIC_URL?: string;
+
   VITE_APP_FIREBASE_CONFIG: string;
 
   // whether to disable live reload / HMR. Usuaully what you want to do when

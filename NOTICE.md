@@ -6,7 +6,9 @@ This repository (**Sketchbench**) is a fork of **[Excalidraw](https://github.com
 
 Additions and modifications by Justyn Roberts ([FintonLabs](https://fintonlabs.com)), also released under the MIT License:
 
-- `ai-server/`: the Claude-powered AI backend and MCP canvas bridge
+- `ai-server/`: the Claude-powered AI backend, the MCP canvas bridge, and self-hosted storage for share links, collaboration rooms and image files (replacing Excalidraw's hosted json.excalidraw.com and Firebase)
+- `excalidraw-app/data/firebase.ts`: a storage-backend mode that routes Firebase operations to that server
+- `.env.production` / `.env.development`: point every backend at Sketchbench's own services instead of Excalidraw's
 - `excalidraw-app/ai/`: the Claude sidebar panel, the canvas bridge client and canvas operations
 - `excalidraw-app/theme/`: the Blueprint theme layer
 - `excalidraw-app/components/ForkNotice.*`: the "About Sketchbench" notice, which credits upstream and links to Excalidraw+

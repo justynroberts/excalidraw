@@ -59,6 +59,9 @@ yarn start                        # app on :3001 (VITE_APP_AI_BACKEND points at 
 
 ### Gotchas
 
+- Self-hosted backends: `.env.production` points share links, rooms, files (`VITE_APP_STORAGE_BACKEND`, via `data/firebase.ts`'s storage mode), AI and collab at Sketchbench services. Never point builds at Excalidraw's own infrastructure (json/oss-collab/oss-ai.excalidraw.com, their Firebase).
+- Deployment (Coolify): three apps. `sketchbench` (root Dockerfile, nginx:80), `sketchbench-api` (`ai-server/Dockerfile`, port 3016, `/data` volume, `REQUIRE_PAIRING=true` plus the limits in `ai-server/README.md`), and `sketchbench-room` (upstream `excalidraw/excalidraw-room`, port 80, `CORS_ORIGIN` set to the app).
+- MCP on a shared server is scoped by a per-browser pairing token (`bridgeClient.ts` → `bridge.mjs`). Anything new that reaches tabs must go through `bridge.pickTab({tabId, pairing})`.
 - Branding: user-facing strings say Sketchbench; "Excalidraw" appears only as attribution and in Excalidraw+ links. Internal `@excalidraw/*` package names and localStorage keys stay as they are, for upstream compatibility.
 - Extra canvas fonts use ids 101-108 (`packages/common/src/constants.ts`) so they cannot collide with fonts upstream adds later. Each font folder carries its license file. Adding a font means: woff2 + `index.ts` in `packages/excalidraw/fonts/<Name>/`, an id in `FONT_FAMILY`, metrics in `font-metadata.ts` (read hhea from the font), an `init()` line in `Fonts.ts`, and an icon case in `FontPickerList.tsx`.
 - Programmatic text inserts must load their fonts first (`ensureFontsLoaded` in `canvasOps.ts`); otherwise text is measured with the fallback font and clips.

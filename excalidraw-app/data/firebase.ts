@@ -149,6 +149,9 @@ export const saveFilesToFirebase = async ({
   prefix: string;
   files: { id: FileId; buffer: Uint8Array }[];
 }) => {
+  if (STORAGE_BACKEND) {
+    return saveFilesToStorageBackend(prefix, files);
+  }
   const storage = await loadFirebaseStorage();
 
   const erroredFiles: FileId[] = [];
@@ -198,6 +201,10 @@ export const saveToFirebase = async (
     isSavedToFirebase(portal, elements)
   ) {
     return null;
+  }
+
+  if (STORAGE_BACKEND) {
+    return saveSceneToStorageBackend(portal, elements, appState);
   }
 
   const firestore = _getFirestore();
@@ -251,6 +258,9 @@ export const loadFromFirebase = async (
   roomKey: string,
   socket: Socket | null,
 ): Promise<readonly SyncableExcalidrawElement[] | null> => {
+  if (STORAGE_BACKEND) {
+    return loadSceneFromStorageBackend(roomId, roomKey, socket);
+  }
   const firestore = _getFirestore();
   const docRef = doc(firestore, "scenes", roomId);
   const docSnap = await getDoc(docRef);
@@ -282,10 +292,14 @@ export const loadFilesFromFirebase = async (
   await Promise.all(
     [...new Set(filesIds)].map(async (id) => {
       try {
-        const url = `https://firebasestorage.googleapis.com/v0/b/${
-          FIREBASE_CONFIG.storageBucket
-        }/o/${encodeURIComponent(prefix.replace(/^\//, ""))}%2F${id}`;
-        const response = await fetch(`${url}?alt=media`);
+        const url = STORAGE_BACKEND
+          ? storageFileUrl(prefix, id)
+          : `https://firebasestorage.googleapis.com/v0/b/${
+              FIREBASE_CONFIG.storageBucket
+            }/o/${encodeURIComponent(prefix.replace(/^\//, ""))}%2F${id}`;
+        const response = await fetch(
+          STORAGE_BACKEND ? url : `${url}?alt=media`,
+        );
         if (response.status < 400) {
           const arrayBuffer = await response.arrayBuffer();
 
@@ -316,4 +330,186 @@ export const loadFilesFromFirebase = async (
   );
 
   return { loadedFiles, erroredFiles };
+};
+
+// -----------------------------------------------------------------------------
+// Sketchbench storage backend
+//
+// When VITE_APP_STORAGE_BACKEND is set, everything above that would use
+// Firebase goes to Sketchbench's own API instead (ai-server/src/storage.mjs).
+// The server only ever sees ciphertext: scenes and files are encrypted here
+// with the room/link key, exactly as they are for Firebase.
+// -----------------------------------------------------------------------------
+
+const STORAGE_BACKEND = (
+  import.meta.env.VITE_APP_STORAGE_BACKEND as string | undefined
+)?.replace(/\/+$/, "");
+
+const SCENE_SAVE_RETRIES = 3;
+
+const toBase64 = (bytes: Uint8Array) => {
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  }
+  return btoa(binary);
+};
+
+const fromBase64 = (value: string) =>
+  Uint8Array.from(atob(value), (char) => char.charCodeAt(0));
+
+/** Adapts base64 JSON to the Bytes-like shape decryptElements expects. */
+const asStoredScene = (json: {
+  sceneVersion: number;
+  iv: string;
+  ciphertext: string;
+}) =>
+  ({
+    sceneVersion: json.sceneVersion,
+    iv: { toUint8Array: () => fromBase64(json.iv) },
+    ciphertext: { toUint8Array: () => fromBase64(json.ciphertext) },
+  } as unknown as FirebaseStoredScene);
+
+const storageFileUrl = (prefix: string, id: string) =>
+  `${STORAGE_BACKEND}/files/${prefix
+    .replace(/^\/+/, "")
+    .split("/")
+    .map(encodeURIComponent)
+    .join("/")}/${encodeURIComponent(id)}`;
+
+const roomUrl = (roomId: string) =>
+  `${STORAGE_BACKEND}/rooms/${encodeURIComponent(roomId)}`;
+
+const saveFilesToStorageBackend = async (
+  prefix: string,
+  files: { id: FileId; buffer: Uint8Array }[],
+) => {
+  const erroredFiles: FileId[] = [];
+  const savedFiles: FileId[] = [];
+  await Promise.all(
+    files.map(async ({ id, buffer }) => {
+      try {
+        const response = await fetch(storageFileUrl(prefix, id), {
+          method: "PUT",
+          headers: { "Content-Type": "application/octet-stream" },
+          body: buffer as Uint8Array<ArrayBuffer>,
+        });
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        savedFiles.push(id);
+      } catch (error) {
+        console.error("[storage] file upload failed", id, error);
+        erroredFiles.push(id);
+      }
+    }),
+  );
+  return { savedFiles, erroredFiles };
+};
+
+type StoredRoom = {
+  revision: number;
+  sceneVersion: number;
+  iv: string;
+  ciphertext: string;
+};
+
+const fetchRoom = async (roomId: string): Promise<StoredRoom | null> => {
+  const response = await fetch(roomUrl(roomId));
+  if (response.status === 404) {
+    return null;
+  }
+  if (!response.ok) {
+    throw new Error(`Room load failed: HTTP ${response.status}`);
+  }
+  return response.json();
+};
+
+const encodeScene = async (
+  elements: readonly SyncableExcalidrawElement[],
+  roomKey: string,
+) => {
+  const { ciphertext, iv } = await encryptElements(roomKey, elements);
+  return {
+    sceneVersion: getSceneVersion(elements),
+    iv: toBase64(iv),
+    ciphertext: toBase64(new Uint8Array(ciphertext)),
+  };
+};
+
+/** Firestore-transaction equivalent: reconcile, then write only if nobody else did. */
+const saveSceneToStorageBackend = async (
+  portal: Portal,
+  elements: readonly SyncableExcalidrawElement[],
+  appState: AppState,
+) => {
+  const { roomId, roomKey, socket } = portal;
+  if (!roomId || !roomKey || !socket) {
+    return null;
+  }
+
+  for (let attempt = 0; attempt < SCENE_SAVE_RETRIES; attempt++) {
+    const previous = await fetchRoom(roomId);
+    let toStore = elements;
+    if (previous) {
+      const prevElements = getSyncableElements(
+        restoreElements(
+          await decryptElements(asStoredScene(previous), roomKey),
+          null,
+        ),
+      );
+      toStore = getSyncableElements(
+        reconcileElements(
+          elements,
+          prevElements as OrderedExcalidrawElement[] as RemoteExcalidrawElement[],
+          appState,
+        ),
+      );
+    }
+    const scene = await encodeScene(toStore, roomKey);
+    const response = await fetch(roomUrl(roomId), {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...scene, ifRevision: previous?.revision ?? 0 }),
+    });
+    if (response.status === 409) {
+      continue; // someone saved in between: reconcile against theirs and retry
+    }
+    if (!response.ok) {
+      throw new Error(`Room save failed: HTTP ${response.status}`);
+    }
+    const storedElements = getSyncableElements(
+      restoreElements(
+        await decryptElements(asStoredScene(scene as StoredRoom), roomKey),
+        null,
+      ),
+    );
+    FirebaseSceneVersionCache.set(socket, storedElements);
+    return toBrandedType<RemoteExcalidrawElement[]>(storedElements);
+  }
+  throw new Error("Room save failed: too many concurrent updates");
+};
+
+const loadSceneFromStorageBackend = async (
+  roomId: string,
+  roomKey: string,
+  socket: Socket | null,
+): Promise<readonly SyncableExcalidrawElement[] | null> => {
+  const stored = await fetchRoom(roomId);
+  if (!stored) {
+    return null;
+  }
+  const elements = getSyncableElements(
+    restoreElements(
+      await decryptElements(asStoredScene(stored), roomKey),
+      null,
+      {
+        deleteInvisibleElements: true,
+      },
+    ),
+  );
+  if (socket) {
+    FirebaseSceneVersionCache.set(socket, elements);
+  }
+  return elements;
 };

@@ -64,6 +64,28 @@ claude mcp add --transport http sketchbench http://localhost:3016/mcp
 
 Every change lands as one undo step in the browser.
 
+## Storage (share links, collaboration rooms, image files)
+
+The same server replaces Excalidraw's hosted `json.excalidraw.com` and Firebase: share links, collaboration room scenes and image files are stored under `DATA_DIR` (default `ai-server/data`, `/data` in Docker). Everything arrives encrypted in the browser with a key the server never sees (it stays in the URL fragment). Files are write-once, and room saves use a revision check, so concurrent editors reconcile instead of overwriting each other.
+
+## Public deployment
+
+Locally nothing needs configuring. On a public host, set:
+
+| Variable | Example |  |
+| --- | --- | --- |
+| `REQUIRE_PAIRING` | `true` | MCP and the assistant only reach the caller's own tabs |
+| `ALLOWED_ORIGINS` | `https://sketchbench.apps.fintonlabs.com` | The app's origin |
+| `ALLOWED_HOSTS` | `sketchbench-api.apps.fintonlabs.com` | This server's public host |
+| `TRUST_PROXY` | `true` | Behind Traefik/Coolify, to rate-limit by real client IP |
+| `AI_DAILY_LIMIT_PER_IP` | `40` | Claude requests per visitor per day (0 = unlimited) |
+| `AI_DAILY_LIMIT_TOTAL` | `1000` | Claude requests per day across everyone |
+| `UPLOAD_DAILY_LIMIT_PER_IP` | `500` | Storage writes per visitor per day |
+
+**Pairing:** every browser generates a private pairing token (the AI panel shows it inside the ready-made `claude mcp add` command). MCP clients present it as `Authorization: Bearer <token>`, and the server only routes their calls to tabs holding the same token, so on a shared server nobody can read or draw on anyone else's canvas. The stdio shim takes it as `SKETCHBENCH_TOKEN`.
+
+`ai-server/Dockerfile` builds the production image (port 3016, `/data` volume).
+
 ## Endpoints
 
 |  |  |

@@ -3,7 +3,10 @@
 // (Claude Desktop, older MCP clients). It holds no canvas state itself: each
 // tool call is forwarded to the running ai-server, which relays it to the tab.
 //
-//   { "command": "node", "args": ["/abs/path/ai-server/src/mcp-stdio.mjs"] }
+//   { "command": "node", "args": ["/abs/path/ai-server/src/mcp-stdio.mjs"],
+//     "env": { "SKETCHBENCH_TOKEN": "<token from the AI panel>" } }
+//
+// Set EXCALIDRAW_AI_URL to use a hosted server instead of a local one.
 
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 
@@ -21,6 +24,9 @@ const runTool = async (name, args) => {
       headers: {
         "Content-Type": "application/json",
         "X-Excalidraw-Bridge": "1",
+        ...(process.env.SKETCHBENCH_TOKEN
+          ? { Authorization: `Bearer ${process.env.SKETCHBENCH_TOKEN}` }
+          : {}),
       },
       body: JSON.stringify(args),
     });

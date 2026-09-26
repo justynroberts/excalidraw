@@ -1,7 +1,7 @@
 import { parseSSEStream } from "@excalidraw/excalidraw";
 import { safelyParseJSON } from "@excalidraw/common";
 
-import { AI_BACKEND_URL } from "./bridgeClient";
+import { AI_BACKEND_URL, PAIRING_TOKEN } from "./bridgeClient";
 
 export type AssistantMessage = { role: "user" | "assistant"; content: string };
 
@@ -40,7 +40,12 @@ export const streamAssistant = async ({
         Accept: "text/event-stream",
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ messages, tabId, selectedIds }),
+      body: JSON.stringify({
+        messages,
+        tabId,
+        pairing: PAIRING_TOKEN,
+        selectedIds,
+      }),
       signal,
     },
   );
