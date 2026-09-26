@@ -384,6 +384,13 @@
       outline-offset: 1px;
     }
   }
+
+  // Square icon variant (fullscreen toggle).
+  .claude-trigger--icon {
+    justify-content: center;
+    width: var(--lg-button-size, 2.25rem);
+    padding: 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

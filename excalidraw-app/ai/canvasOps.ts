@@ -209,7 +209,7 @@ type Box = { x: number; y: number; width: number; height: number };
  * binding's fixed point from the skeleton's endpoints, so an arrow left at its
  * default 100px length binds to a point outside the target shape.
  */
-const routeBoundArrows = (
+export const routeBoundArrows = (
   skeletons: Params[],
   scene: readonly ExcalidrawElement[],
 ): Params[] => {
