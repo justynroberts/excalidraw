@@ -20,7 +20,7 @@ import {
   Scene,
   updateBindings,
 } from "@excalidraw/element";
-import { randomId } from "@excalidraw/common";
+import { FONT_FAMILY, randomId } from "@excalidraw/common";
 
 import type {
   ExcalidrawElement,
@@ -29,11 +29,6 @@ import type {
 } from "@excalidraw/element/types";
 import type { ExcalidrawElementSkeleton } from "@excalidraw/element";
 import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
-
-import {
-  DASHBOARD_TEMPLATES,
-  getDashboardTemplate,
-} from "./templates/dashboards";
 
 type Params = Record<string, any>;
 
@@ -330,7 +325,34 @@ const bindToExistingShapes = (
   return { created, touched: [...touched.values()] };
 };
 
-const addElements = (api: ExcalidrawImperativeAPI, params: Params) => {
+/**
+ * Text is measured when skeletons are converted, so any font a batch uses must
+ * be loaded first; otherwise boxes are sized with the fallback font and
+ * clip once the real font arrives.
+ */
+const ensureFontsLoaded = async (skeletons: readonly Params[]) => {
+  const ids = new Set<number>();
+  for (const s of skeletons) {
+    if (typeof s.fontFamily === "number") {
+      ids.add(s.fontFamily);
+    }
+    if (typeof s.label?.fontFamily === "number") {
+      ids.add(s.label.fontFamily);
+    }
+  }
+  const names = Object.entries(FONT_FAMILY)
+    .filter(([, id]) => ids.has(id))
+    .map(([name]) => name);
+  await Promise.all(
+    names.map((name) =>
+      document.fonts.load(`20px "${name}"`).catch((error) => {
+        console.warn("[canvasOps] font failed to load", name, error);
+      }),
+    ),
+  );
+};
+
+const addElements = async (api: ExcalidrawImperativeAPI, params: Params) => {
   if (!Array.isArray(params.elements) || !params.elements.length) {
     throw new Error("`elements` must be a non-empty array.");
   }
@@ -345,6 +367,7 @@ const addElements = (api: ExcalidrawImperativeAPI, params: Params) => {
   const routed = routeBoundArrows(skeletons, live).map((s) =>
     s.type === "arrow" && !s.id ? { ...s, id: randomId() } : s,
   );
+  await ensureFontsLoaded(routed);
   const converted = convertToExcalidrawElements(
     routed as ExcalidrawElementSkeleton[],
     { regenerateIds: false },
@@ -392,43 +415,6 @@ const placeBesideContent = (
   return elements.map((el) =>
     newElementWith(el, { x: el.x + dx, y: el.y + dy }),
   );
-};
-
-const listTemplates = () => ({
-  templates: DASHBOARD_TEMPLATES.map(({ id, name, description }) => ({
-    id,
-    name,
-    description,
-  })),
-});
-
-export const insertTemplate = (
-  api: ExcalidrawImperativeAPI,
-  params: Params,
-) => {
-  const template = getDashboardTemplate(String(params.template ?? ""));
-  if (!template) {
-    throw new Error(
-      `Unknown template. Available: ${DASHBOARD_TEMPLATES.map((t) => t.id).join(
-        ", ",
-      )}`,
-    );
-  }
-  // One group so the whole dashboard moves as a unit; double-click to edit.
-  const groupId = randomId();
-  const converted = convertToExcalidrawElements(
-    template.build() as ExcalidrawElementSkeleton[],
-    { regenerateIds: true },
-  ).map((el) => ({ ...el, groupIds: [groupId, ...el.groupIds] }));
-  const placed = placeBesideContent(api, converted, params);
-  commitNewElements(api, placed, false);
-  focusView(api, { ids: placed.map((el) => el.id) });
-  return {
-    template: template.id,
-    groupId,
-    elements: placed.length,
-    bounds: getCommonBounds(placed).map(round),
-  };
 };
 
 const addMermaid = async (api: ExcalidrawImperativeAPI, params: Params) => {
@@ -667,6 +653,4 @@ export const CANVAS_METHODS: Record<
   exportImage,
   focusView,
   clearCanvas,
-  listTemplates,
-  insertTemplate,
 };

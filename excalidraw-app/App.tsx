@@ -149,6 +149,7 @@ import "./theme/blueprint.scss";
 
 import { ExcalidrawPlusPromoBanner } from "./components/ExcalidrawPlusPromoBanner";
 import { AppSidebar, CLAUDE_SIDEBAR_TAB } from "./components/AppSidebar";
+import { ForkNotice } from "./components/ForkNotice";
 import { startBridge } from "./ai/bridgeClient";
 
 import type { CollabAPI } from "./collab/Collab";
@@ -1016,7 +1017,7 @@ const ExcalidrawWrapper = () => {
               type="button"
               className="claude-trigger"
               aria-pressed={claudeOpen}
-              title="Claude (canvas assistant)"
+              title="AI assistant (Claude)"
               onClick={() =>
                 excalidrawAPI?.toggleSidebar({
                   name: "default",
@@ -1025,7 +1026,7 @@ const ExcalidrawWrapper = () => {
                 })
               }
             >
-              Claude
+              AI
             </button>
           );
 
@@ -1140,6 +1141,7 @@ const ExcalidrawWrapper = () => {
         />
 
         <AppSidebar excalidrawAPI={excalidrawAPI} />
+        <ForkNotice />
 
         {errorMessage && (
           <ErrorDialog onClose={() => setErrorMessage("")}>

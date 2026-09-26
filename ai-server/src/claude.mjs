@@ -78,8 +78,7 @@ Canvas facts:
 - For structured diagrams (flows, sequences, ER, class, state) add_mermaid is faster and neater than placing shapes by hand. Use add_elements for freeform layouts, annotations, sticky notes and edits.
 - Colours: stroke "#1e1e1e" by default. Soft fills that read well in both themes: "#a5d8ff" blue, "#b2f2bb" green, "#ffec99" yellow, "#ffc9c9" red, "#d0bfff" violet, "#eebefa" pink. Use fillStyle "solid" with fills.
 
-Charts and dashboards:
-- For a dashboard request, start from insert_dashboard_template when one fits, then adapt titles, labels and numbers.
+Charts:
 - Every chart with two or more series has a legend and a direct label at each series end; a single series is named by the chart title. Never more than three series in one chart: fold the rest into "Other" or split the chart. One y-axis only.
 - Series colours, in this fixed order: "#2a78d6", "#eb6834", "#1baf7a". Text stays dark ink ("#1e1e1e" / "#495057"), never the series colour. Red/green status colours only for status, always with a word or arrow beside them.
 

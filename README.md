@@ -1,10 +1,12 @@
-> [!NOTE] > **This is a fork of [Excalidraw](https://github.com/excalidraw/excalidraw)** (MIT, © Excalidraw) with a Claude AI layer: a working backend for Excalidraw's text-to-diagram and wireframe-to-code features, a canvas assistant panel, an MCP server that lets Claude Code / Claude Desktop draw on your live canvas, ten dashboard templates, and a restyled editor chrome. See [`ai-server/README.md`](ai-server/README.md) to run it and [`NOTICE.md`](NOTICE.md) for attribution. Everything below is the upstream README.
+> [!NOTE]
 >
-> ```bash
-> yarn install && yarn install:ai
-> cp ai-server/.env.example ai-server/.env   # add ANTHROPIC_API_KEY
-> yarn start:ai & yarn start                 # app on http://localhost:3001
-> ```
+> **Excalidraw-FL is a fork of [Excalidraw](https://github.com/excalidraw/excalidraw)** (MIT, © Excalidraw) with a Claude AI layer: a working backend for Excalidraw's text-to-diagram and wireframe-to-code features, an AI assistant panel, an MCP server that lets Claude Code / Claude Desktop draw on your live canvas, seven extra handwritten and architect fonts, and a restyled editor. See [`ai-server/README.md`](ai-server/README.md) to run it and [`NOTICE.md`](NOTICE.md) for attribution. If you use Excalidraw, please support the original team with [Excalidraw+](https://plus.excalidraw.com). Everything below is the upstream README.
+
+```bash
+yarn install && yarn install:ai
+cp ai-server/.env.example ai-server/.env   # add ANTHROPIC_API_KEY
+yarn start:ai & yarn start                 # app on http://localhost:3001
+```
 
 <a href="https://excalidraw.com/" target="_blank" rel="noopener">
   <picture>

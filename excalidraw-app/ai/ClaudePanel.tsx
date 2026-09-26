@@ -2,14 +2,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
 
+import { openForkNotice } from "../components/ForkNotice";
+
 import {
   AI_BACKEND_URL,
   setAssistantBusy,
   useBridgeState,
 } from "./bridgeClient";
 import { streamAssistant } from "./assistantClient";
-import { insertTemplate } from "./canvasOps";
-import { DASHBOARD_TEMPLATES } from "./templates/dashboards";
 
 import "./ClaudePanel.scss";
 
@@ -92,60 +92,16 @@ const turnToMessage = (turn: Turn): AssistantMessage | null => {
   return content ? { role: "assistant", content } : null;
 };
 
-const AboutButton = () => {
-  const dialogRef = useRef<HTMLDialogElement>(null);
-  return (
-    <>
-      <button
-        type="button"
-        className="claude-panel__icon-btn"
-        aria-label="About this app"
-        onClick={() => dialogRef.current?.showModal()}
-      >
-        i
-      </button>
-      <dialog
-        ref={dialogRef}
-        className="claude-panel__about"
-        onClick={(event) => {
-          // Clicks on the backdrop land on the dialog element itself.
-          if (event.target === dialogRef.current) {
-            dialogRef.current.close();
-          }
-        }}
-      >
-        <div className="claude-panel__about-body">
-          <p className="claude-panel__about-title">Excalidraw + Claude</p>
-          <p>
-            Canvas assistant, text-to-diagram, wireframe-to-code and an MCP
-            bridge, built on{" "}
-            <a
-              href="https://github.com/excalidraw/excalidraw"
-              target="_blank"
-              rel="noopener"
-            >
-              Excalidraw
-            </a>{" "}
-            (MIT).
-          </p>
-          <p>
-            Made by{" "}
-            <a href="https://fintonlabs.com" target="_blank" rel="noopener">
-              FintonLabs
-            </a>
-          </p>
-          <button
-            type="button"
-            className="claude-panel__text-btn"
-            onClick={() => dialogRef.current?.close()}
-          >
-            Close
-          </button>
-        </div>
-      </dialog>
-    </>
-  );
-};
+const AboutButton = () => (
+  <button
+    type="button"
+    className="claude-panel__icon-btn"
+    aria-label="About this app"
+    onClick={openForkNotice}
+  >
+    i
+  </button>
+);
 
 const CopyLine = ({ text }: { text: string }) => {
   const [copied, setCopied] = useState(false);
@@ -307,7 +263,8 @@ export const ClaudePanel = ({
   return (
     <div className="claude-panel">
       <header className="claude-panel__head">
-        <span className="claude-panel__title">Claude</span>
+        <span className="claude-panel__title">AI</span>
+        <span className="claude-panel__muted">Claude</span>
         <span
           className={`claude-panel__status claude-panel__status--${bridge.status}`}
           role="status"
@@ -385,44 +342,6 @@ export const ClaudePanel = ({
           ),
         )}
       </div>
-
-      <details className="claude-panel__templates" open={turns.length === 0}>
-        <summary>
-          Dashboards
-          <span className="claude-panel__muted">
-            {" "}
-            · {DASHBOARD_TEMPLATES.length}
-          </span>
-        </summary>
-        <ul>
-          {DASHBOARD_TEMPLATES.map((template) => (
-            <li key={template.id}>
-              <button
-                type="button"
-                disabled={!api}
-                onClick={() => {
-                  if (!api) {
-                    return;
-                  }
-                  try {
-                    insertTemplate(api, { template: template.id });
-                  } catch (error) {
-                    console.error(
-                      "[claude-panel] template insert failed",
-                      error,
-                    );
-                  }
-                }}
-              >
-                <span>{template.name}</span>
-                <span className="claude-panel__muted">
-                  {template.description}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      </details>
 
       <div
         className="claude-panel__actions"

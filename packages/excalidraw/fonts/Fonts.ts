@@ -42,6 +42,13 @@ import { LilitaFontFaces } from "./Lilita";
 import { NunitoFontFaces } from "./Nunito";
 import { VirgilFontFaces } from "./Virgil";
 import { XiaolaiFontFaces } from "./Xiaolai";
+import { ArchitectsDaughterFontFaces } from "./ArchitectsDaughter";
+import { CaveatFontFaces } from "./Caveat";
+import { KalamFontFaces } from "./Kalam";
+import { PatrickHandFontFaces } from "./PatrickHand";
+import { GloriaHallelujahFontFaces } from "./GloriaHallelujah";
+import { ShadowsIntoLightFontFaces } from "./ShadowsIntoLight";
+import { GochiHandFontFaces } from "./GochiHand";
 
 export class Fonts {
   // it's ok to track fonts across multiple instances only once, so let's use
@@ -405,6 +412,14 @@ export class Fonts {
     init("Lilita One", ...LilitaFontFaces);
     init("Nunito", ...NunitoFontFaces);
     init("Virgil", ...VirgilFontFaces);
+    // fork additions
+    init("Architects Daughter", ...ArchitectsDaughterFontFaces);
+    init("Caveat", ...CaveatFontFaces);
+    init("Kalam", ...KalamFontFaces);
+    init("Patrick Hand", ...PatrickHandFontFaces);
+    init("Gloria Hallelujah", ...GloriaHallelujahFontFaces);
+    init("Shadows Into Light", ...ShadowsIntoLightFontFaces);
+    init("Gochi Hand", ...GochiHandFontFaces);
 
     // fallback font faces
     init(CJK_HAND_DRAWN_FALLBACK_FONT, ...XiaolaiFontFaces);

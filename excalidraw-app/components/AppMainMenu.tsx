@@ -2,6 +2,8 @@ import {
   loginIcon,
   ExcalLogo,
   eyeIcon,
+  helpIcon,
+  LinkIcon,
 } from "@excalidraw/excalidraw/components/icons";
 import { useI18n } from "@excalidraw/excalidraw/i18n";
 import { MainMenu } from "@excalidraw/excalidraw/index";
@@ -15,6 +17,7 @@ import { LanguageList } from "../app-language/LanguageList";
 import { isExcalidrawPlusSignedUser } from "../app_constants";
 
 import { saveDebugState } from "./DebugCanvas";
+import { openForkNotice } from "./ForkNotice";
 
 export const AppMainMenu: React.FC<{
   onCollabDialogOpen: () => any;
@@ -40,6 +43,13 @@ export const AppMainMenu: React.FC<{
       <MainMenu.DefaultItems.SearchMenu />
       <MainMenu.DefaultItems.Help />
       <MainMenu.DefaultItems.ClearCanvas />
+      <MainMenu.Separator />
+      <MainMenu.Item icon={helpIcon} onSelect={openForkNotice}>
+        About Excalidraw-FL
+      </MainMenu.Item>
+      <MainMenu.ItemLink icon={LinkIcon} href="https://fintonlabs.com">
+        FintonLabs
+      </MainMenu.ItemLink>
       <MainMenu.Separator />
       <MainMenu.ItemLink
         icon={ExcalLogo}

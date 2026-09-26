@@ -79,6 +79,13 @@ export const getFontFamilyIcon = (
   switch (fontFamily) {
     case FONT_FAMILY.Excalifont:
     case FONT_FAMILY.Virgil:
+    case FONT_FAMILY["Architects Daughter"]:
+    case FONT_FAMILY.Caveat:
+    case FONT_FAMILY.Kalam:
+    case FONT_FAMILY["Patrick Hand"]:
+    case FONT_FAMILY["Gloria Hallelujah"]:
+    case FONT_FAMILY["Shadows Into Light"]:
+    case FONT_FAMILY["Gochi Hand"]:
       return FreedrawIcon;
     case FONT_FAMILY.Nunito:
     case FONT_FAMILY.Helvetica:

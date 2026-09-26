@@ -297,8 +297,6 @@ const summarizeTool = (name, input) => {
       return "Moving the view";
     case "clear_canvas":
       return "Clearing the canvas";
-    case "insert_dashboard_template":
-      return `Inserting ${input.template} dashboard`;
     default:
       return name;
   }

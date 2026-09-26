@@ -6,8 +6,8 @@
 
 .excalidraw {
   .claude-panel {
-    --cp-font: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas,
-      monospace;
+    --cp-font: var(--ui-font);
+    --cp-mono: var(--bp-mono, ui-monospace, Menlo, monospace);
     --cp-rule: var(--default-border-color);
     --cp-muted: var(--color-gray-50);
     --cp-accent: var(--color-primary);
@@ -23,7 +23,7 @@
     color: var(--text-primary-color);
 
     code {
-      font-family: var(--cp-font);
+      font-family: var(--cp-mono);
       font-size: 11px;
     }
 
@@ -157,6 +157,12 @@
     color: var(--cp-muted);
   }
 
+  .claude-panel__prompt,
+  .claude-panel__tool {
+    font-family: var(--cp-mono);
+    font-size: 11px;
+  }
+
   .claude-panel__tool-state {
     flex: 0 0 24px;
     font-variant-numeric: tabular-nums;
@@ -176,43 +182,6 @@
 
   .claude-panel__error {
     color: var(--cp-danger);
-  }
-
-  .claude-panel__templates {
-    padding: 8px 16px 8px 8px;
-    border-top: 1px solid var(--cp-rule);
-    max-height: 40%;
-    overflow-y: auto;
-
-    summary {
-      cursor: pointer;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-    }
-
-    ul {
-      list-style: none;
-      margin: 8px 0 0;
-      padding: 0;
-    }
-
-    button {
-      display: grid;
-      width: 100%;
-      gap: 0;
-      padding: 4px 0 4px 8px;
-      border: 0;
-      border-left: 2px solid transparent;
-      background: none;
-      color: var(--text-primary-color);
-      font-size: 12px;
-      text-align: left;
-      transition: border-color 150ms ease-out;
-
-      &:hover:not(:disabled) {
-        border-left-color: var(--cp-accent);
-      }
-    }
   }
 
   .claude-panel__actions {
@@ -314,37 +283,6 @@
     }
   }
 
-  .claude-panel__about {
-    max-width: 320px;
-    padding: 0;
-    border: 1px solid var(--cp-rule);
-    border-radius: 4px;
-    background: var(--island-bg-color);
-    color: var(--text-primary-color);
-    font-family: var(--cp-font);
-    font-size: 12px;
-
-    &::backdrop {
-      background: rgba(0, 0, 0, 0.4);
-    }
-
-    a {
-      color: var(--cp-accent);
-    }
-  }
-
-  .claude-panel__about-body {
-    padding: 16px;
-
-    p {
-      margin: 0 0 8px;
-    }
-  }
-
-  .claude-panel__about-title {
-    font-weight: 700;
-  }
-
   .claude-trigger {
     display: inline-flex;
     align-items: center;
@@ -354,11 +292,10 @@
     border-radius: 4px;
     background: var(--island-bg-color);
     color: var(--text-primary-color);
-    font-family: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas,
-      monospace;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
+    font-family: var(--ui-font);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
     cursor: pointer;
 
     &[aria-pressed="true"] {

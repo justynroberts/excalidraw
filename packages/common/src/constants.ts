@@ -145,6 +145,15 @@ export const FONT_FAMILY = {
   "Comic Shanns": 8,
   "Liberation Sans": 9,
   Assistant: 10,
+  // Fork additions (handwritten / architect). Ids start at 101 so they never
+  // collide with families upstream adds later.
+  "Architects Daughter": 101,
+  Caveat: 102,
+  Kalam: 103,
+  "Patrick Hand": 104,
+  "Gloria Hallelujah": 105,
+  "Shadows Into Light": 106,
+  "Gochi Hand": 107,
 };
 
 // Segoe UI Emoji fails to properly fallback for some glyphs: ∞, ∫, ≠

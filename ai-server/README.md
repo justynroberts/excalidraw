@@ -58,7 +58,6 @@ claude mcp add --transport http excalidraw http://localhost:3016/mcp
 | `update_elements` | Move, resize, recolour, relabel; bound arrows re-route |
 | `delete_elements` | Delete by id |
 | `add_mermaid` | Mermaid source to native, editable elements |
-| `insert_dashboard_template` | One of ten ready-made dashboards |
 | `export_image` | PNG of the canvas (or some elements), so Claude can see it |
 | `focus_view` | Scroll and zoom the user's view |
 | `clear_canvas` | Delete everything (undoable) |

@@ -1,0 +1,104 @@
+/* MIT License - Copyright (c) fintonlabs.com */
+
+// Blueprint styling: hairline frame, no shadow, one accent, square corners.
+
+.excalidraw {
+  .fork-notice {
+    width: min(480px, calc(100vw - 32px));
+    padding: 0;
+    border: 1px solid var(--default-border-color);
+    border-radius: 4px;
+    background: var(--island-bg-color);
+    color: var(--text-primary-color);
+    font-family: var(--ui-font);
+    font-size: 13px;
+    line-height: 1.55;
+
+    &::backdrop {
+      background: rgba(11, 12, 15, 0.72);
+    }
+
+    a {
+      color: var(--color-primary);
+      text-underline-offset: 3px;
+    }
+
+    a:focus-visible,
+    button:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+    }
+  }
+
+  .fork-notice__body {
+    padding: 24px 24px 24px 24px;
+
+    h2 {
+      margin: 0 0 16px;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    p {
+      margin: 0 0 12px;
+    }
+
+    ul {
+      margin: 0 0 16px;
+      padding: 0 0 0 16px;
+      color: var(--color-gray-50);
+
+      li::marker {
+        content: "— ";
+        color: var(--color-primary);
+      }
+    }
+  }
+
+  .fork-notice__eyebrow {
+    margin: 0 0 4px !important;
+    color: var(--color-gray-50);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .fork-notice__support {
+    margin: 0 0 16px;
+    padding: 16px 0;
+    border-top: 1px solid var(--default-border-color);
+    border-bottom: 1px solid var(--default-border-color);
+  }
+
+  .fork-notice__primary {
+    display: inline-block;
+    padding: 6px 16px;
+    border-radius: 2px;
+    background: var(--color-primary);
+    color: var(--island-bg-color) !important;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .fork-notice__fine {
+    color: var(--color-gray-50);
+    font-size: 11px;
+  }
+
+  .fork-notice__close {
+    padding: 6px 16px;
+    border: 1px solid var(--default-border-color);
+    border-radius: 2px;
+    background: none;
+    color: var(--text-primary-color);
+    font-family: var(--ui-font);
+    font-size: 13px;
+    cursor: pointer;
+    transition: border-color 150ms ease-out;
+
+    &:hover {
+      border-color: var(--color-primary);
+    }
+  }
+}

@@ -4,12 +4,19 @@
 
 const color = { type: "string", description: 'CSS hex colour, e.g. "#a5d8ff"' };
 
+const fontFamily = {
+  type: "number",
+  description:
+    "Font: 5 Excalifont (hand-drawn, default), 6 Nunito (clean), 8 Comic Shanns (code), 7 Lilita One (heading), 101 Architects Daughter (architect lettering), 102 Caveat, 103 Kalam, 104 Patrick Hand, 105 Gloria Hallelujah, 106 Shadows Into Light, 107 Gochi Hand.",
+};
+
 const label = {
   type: "object",
   description: "Text centred inside the shape (or along the arrow).",
   properties: {
     text: { type: "string" },
     fontSize: { type: "number" },
+    fontFamily,
   },
   required: ["text"],
 };
@@ -50,6 +57,7 @@ const skeletonElement = {
     height: { type: "number" },
     text: { type: "string", description: "Required for type=text." },
     fontSize: { type: "number" },
+    fontFamily,
     label,
     start: binding,
     end: binding,
@@ -213,34 +221,6 @@ export const CANVAS_TOOLS = [
     },
   },
   {
-    name: "insert_dashboard_template",
-    description:
-      "Insert a ready-made dashboard (KPI tiles, labelled charts, tables) as one editable group, placed beside existing content. Templates: saas-metrics, web-analytics, sales-pipeline, marketing, service-health, support, finance, ecommerce, product-engagement, project-delivery. Start from one of these when asked for a dashboard, then edit titles, labels and numbers with update_elements.",
-    input_schema: {
-      type: "object",
-      properties: {
-        template: {
-          type: "string",
-          enum: [
-            "saas-metrics",
-            "web-analytics",
-            "sales-pipeline",
-            "marketing",
-            "service-health",
-            "support",
-            "finance",
-            "ecommerce",
-            "product-engagement",
-            "project-delivery",
-          ],
-        },
-        x: { type: "number" },
-        y: { type: "number" },
-      },
-      required: ["template"],
-    },
-  },
-  {
     name: "clear_canvas",
     description:
       "Delete every element on the whiteboard. Undoable, but only use it when the user explicitly asks to start over.",
@@ -257,7 +237,6 @@ const METHODS = {
   export_image: "exportImage",
   focus_view: "focusView",
   clear_canvas: "clearCanvas",
-  insert_dashboard_template: "insertTemplate",
 };
 
 /**

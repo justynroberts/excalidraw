@@ -38,7 +38,7 @@ yarn fix             # Auto-fix formatting and linting issues
 
 ## This fork: Claude AI layer
 
-This is a fork of [excalidraw/excalidraw](https://github.com/excalidraw/excalidraw) (MIT). The fork adds a Claude-powered AI backend, an in-app canvas assistant, an MCP bridge, dashboard templates and a restyled chrome. Keep fork changes out of `packages/*` where possible so upstream merges stay clean (`git fetch upstream && git merge upstream/master`).
+This is a fork of [excalidraw/excalidraw](https://github.com/excalidraw/excalidraw) (MIT). The fork adds a Claude-powered AI backend, an in-app canvas assistant, an MCP bridge and a restyled chrome. Keep fork changes out of `packages/*` where possible so upstream merges stay clean (`git fetch upstream && git merge upstream/master`).
 
 ### Running
 
@@ -55,7 +55,6 @@ yarn start                        # app on :3001 (VITE_APP_AI_BACKEND points at 
 - The canvas only exists in the browser. Every canvas tool (MCP or assistant) goes server -> WebSocket `/bridge` -> the most recently focused tab -> `excalidraw-app/ai/canvasOps.ts` -> reply. `src/bridge.mjs` is the server end, `excalidraw-app/ai/bridgeClient.ts` the browser end.
 - Tools are defined once in `ai-server/src/tools.mjs` (JSON Schema) and served both as MCP tools (`src/mcp.mjs`, HTTP at `/mcp`, stdio via `src/mcp-stdio.mjs`) and as Claude API tools for the assistant loop in `server.mjs`. Adding a tool = schema + `METHODS` entry in `tools.mjs` + handler in `CANVAS_METHODS` (`canvasOps.ts`).
 - Upstream's text-to-diagram and diagram-to-code UIs call `/v1/ai/text-to-diagram/chat-streaming` and `/v1/ai/diagram-to-code/generate-streaming`; the SSE chunk shape (`{type: "content" | "error" | "done"}`) is dictated by `packages/excalidraw/components/TTDDialog/utils/TTDStreamFetch.ts`. TTD expects raw Mermaid back.
-- Dashboard templates: `excalidraw-app/ai/templates/widgets.ts` (chart builders) and `dashboards.ts` (the ten templates). Static copies live in `templates/dashboards/*.excalidraw`.
 - UI: `excalidraw-app/ai/ClaudePanel.tsx` (sidebar tab `claude`), `excalidraw-app/theme/blueprint.scss` (token overrides on Excalidraw's theme). Design rules in `DESIGN.md`.
 
 ### Gotchas
@@ -63,5 +62,5 @@ yarn start                        # app on :3001 (VITE_APP_AI_BACKEND points at 
 - After editing `excalidraw-app/ai/*`, **reload the tab**: HMR swaps modules but the running bridge keeps its closure over the old `canvasOps`.
 - `convertToExcalidrawElements` derives an arrow binding's `fixedPoint` from the skeleton's own endpoints and only binds to shapes in the same batch. `canvasOps.ts` pre-routes arrows edge-to-edge (`routeBoundArrows`) and binds to existing shapes itself (`bindToExistingShapes`). Moving/resizing uses a scratch `Scene` + `updateBindings`, as the Stats panel does.
 - Deleted elements keep their ids; `addElements` lets new elements reuse them (bumping `version` so collab reconciliation keeps the new one).
-- Charts: max three series per chart (validated palette slots), legend + direct end labels whenever there are two or more series, text in ink colours, status colours only with a word/arrow. The assistant's system prompt enforces the same rules.
+- Charts drawn by the assistant: max three series (validated palette slots), legend + direct end labels whenever there are two or more series, text in ink colours, status colours only with a word/arrow. Enforced by the system prompt in `ai-server/src/claude.mjs`.
 - The server binds `localhost` (not `127.0.0.1`) and reads `AI_SERVER_HOST`, not `HOST` (zsh exports `HOST` as the machine name). It rejects foreign `Origin`s and non-local `Host` headers; `/v1/canvas/tools/*` also requires the `X-Excalidraw-Bridge: 1` header.

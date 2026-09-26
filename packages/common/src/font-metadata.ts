@@ -33,6 +33,62 @@ export interface FontMetadata {
 }
 
 export const FONT_METADATA: Record<number, FontMetadata> = {
+  [FONT_FAMILY["Architects Daughter"]]: {
+    metrics: {
+      unitsPerEm: 1024,
+      ascender: 1010,
+      descender: -413,
+      lineHeight: 1.35,
+    },
+  },
+  [FONT_FAMILY.Caveat]: {
+    metrics: {
+      unitsPerEm: 1000,
+      ascender: 960,
+      descender: -300,
+      lineHeight: 1.25,
+    },
+  },
+  [FONT_FAMILY.Kalam]: {
+    metrics: {
+      unitsPerEm: 1000,
+      ascender: 1063,
+      descender: -531,
+      lineHeight: 1.4,
+    },
+  },
+  [FONT_FAMILY["Patrick Hand"]]: {
+    metrics: {
+      unitsPerEm: 1000,
+      ascender: 1042,
+      descender: -312,
+      lineHeight: 1.3,
+    },
+  },
+  [FONT_FAMILY["Gloria Hallelujah"]]: {
+    metrics: {
+      unitsPerEm: 1024,
+      ascender: 1439,
+      descender: -591,
+      lineHeight: 1.6,
+    },
+  },
+  [FONT_FAMILY["Shadows Into Light"]]: {
+    metrics: {
+      unitsPerEm: 1024,
+      ascender: 1203,
+      descender: -442,
+      lineHeight: 1.45,
+    },
+  },
+  [FONT_FAMILY["Gochi Hand"]]: {
+    metrics: {
+      unitsPerEm: 2048,
+      ascender: 1579,
+      descender: -835,
+      lineHeight: 1.2,
+    },
+  },
   [FONT_FAMILY.Excalifont]: {
     metrics: {
       unitsPerEm: 1000,
